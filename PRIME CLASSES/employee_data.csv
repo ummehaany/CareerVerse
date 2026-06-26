@@ -1,0 +1,46 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "7cca8f89-a90d-422e-88cb-669f0b219eca",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "id,name,age,country,gender,income\n",
+    "1,John Doe,29,USA,Male,55000\n",
+    "1,John Doe,29,USA,Male,55000\n",
+    "2,Jane Smith,,Canada,Female,62000\n",
+    "3,Alex,,USA,Unknown,47000\n",
+    "4,Maria Garcia,34,Spain,Female,\n",
+    "5,Li Wei,27,China,Male,51000\n",
+    "6,,45,India,Female,73000\n",
+    "7,Ahmed Khan,38,,Male,68000\n",
+    "8,Rachel Lee,29,USA,Female,62000\n",
+    "9,Carlos Ruiz,,Mexico,Male,45000\n",
+    "10,Emily Davis,31,USA,,58000"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:base] *",
+   "language": "python",
+   "name": "conda-base-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

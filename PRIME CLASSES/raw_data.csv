@@ -1,0 +1,45 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "581b0cb4-88a6-4edb-88d8-c4e3ce3684fd",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ID,Name,Age,Department,Salary\n",
+    "1,Alice,25,HR,55000\n",
+    "2,Bob,32,IT,72000\n",
+    "3,Charlie,28,Finance,48000\n",
+    "4,David,45,Marketing,91000\n",
+    "5,Eva,38,IT,65000\n",
+    "6,Frank,29,Finance,50000\n",
+    "7,Grace,41,HR,82000\n",
+    "8,Hannah,26,Marketing,47000\n",
+    "9,Ian,35,IT,75000\n",
+    "10,Julia,30,Finance,60000"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:base] *",
+   "language": "python",
+   "name": "conda-base-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
