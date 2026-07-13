@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — CareerVerse.
+ * Palette derived from the validated data-viz reference palette (light/dark
+ * both selected, not auto-flipped). `background`/`foreground` are kept from the
+ * Phase 1 scaffold so existing primitives (Card, Button, auth pages) are
+ * unchanged; everything below is additive.
+ */
+:root {
+  --background: #ffffff; /* card / raised surface */
+  --foreground: #171717; /* primary ink */
+
+  --surface: #f7f7f5; /* app shell page plane (behind cards) */
+  --muted: #6b6a66; /* secondary ink */
+  --subtle: #8b8a85; /* tertiary / axis-label ink */
+  --border: rgba(23, 23, 23, 0.1); /* hairline ring */
+
+  --primary: #2a78d6; /* brand */
+  --primary-foreground: #ffffff;
+
+  --success: #0a8a0a;
+  --warning: #b57500;
+  --danger: #d03b3b;
+
+  /* Feature accents — categorical slots in fixed order (identity, not rank). */
+  --accent-assessment: #2a78d6; /* blue   */
+  --accent-roadmap: #12986a; /* aqua   */
+  --accent-resume: #5a49c4; /* violet */
+  --accent-interview: #d9561f; /* orange */
+  --accent-mentor: #c6467c; /* magenta*/
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141414; /* card surface */
+    --foreground: #ededed;
+
+    --surface: #0b0b0b; /* page plane */
+    --muted: #a8a7a1;
+    --subtle: #7d7c77;
+    --border: rgba(255, 255, 255, 0.1);
+
+    --primary: #3987e5;
+    --primary-foreground: #0a0a0a;
+
+    --success: #17a917;
+    --warning: #e0a013;
+    --danger: #e05252;
+
+    --accent-assessment: #3987e5;
+    --accent-roadmap: #199e70;
+    --accent-resume: #9085e9;
+    --accent-interview: #e0703f;
+    --accent-mentor: #d55181;
+  }
+}
+
+body {
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Subtle entrance animations (kept minimal; disabled under reduced-motion). */
+@keyframes cv-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cv-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-up {
+  animation: cv-fade-up 0.4s ease both;
+}
+
+.animate-fade-in {
+  animation: cv-fade-in 0.35s ease both;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles — used by the Resume Builder's PDF export. Everything is hidden
+ * except the resume, which is promoted to fill the page for a clean export. */
+@media print {
+  body {
+    background: #ffffff;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .resume-print-area,
+  .resume-print-area * {
+    visibility: visible;
+  }
+  .resume-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 24px;
+  }
+}
