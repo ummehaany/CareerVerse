@@ -150,13 +150,14 @@ export interface RoadmapResult {
 export async function generateRoadmap(
   careerTitle: string,
   profile: StructuredProfile,
+  memoryContext?: string,
 ): Promise<RoadmapResult> {
   guardProfile(profile);
 
   const provider = getAIProvider();
   const { data, usage } = await provider.generateObject(roadmapSchema, {
     system: buildRoadmapSystemPrompt(),
-    prompt: buildRoadmapUserPrompt(careerTitle, profile),
+    prompt: buildRoadmapUserPrompt(careerTitle, profile) + (memoryContext ? `\n\n${memoryContext}` : ""),
     temperature: 0.6,
     maxOutputTokens: 8000,
     responseSchema: RESPONSE_SCHEMA,

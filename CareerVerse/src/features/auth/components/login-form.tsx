@@ -9,6 +9,7 @@ import { loginSchema, type LoginInput } from "../schema";
 import { signInWithEmail } from "../api";
 import { getAuthErrorMessage } from "../errors";
 import { GoogleButton } from "./google-button";
+import { GithubButton } from "./github-button";
 import { FieldError } from "./field-error";
 import { OrDivider } from "./or-divider";
 import { ROUTES } from "@/config/routes";
@@ -79,6 +80,7 @@ export function LoginForm() {
 
       <OrDivider />
       <GoogleButton redirectTo={redirectTo} onError={(m) => setFormError(m || null)} />
+      <GithubButton redirectTo={redirectTo} onError={(m) => setFormError(m || null)} />
 
       <p className="text-center text-sm text-foreground/60">
         Don&apos;t have an account?{" "}

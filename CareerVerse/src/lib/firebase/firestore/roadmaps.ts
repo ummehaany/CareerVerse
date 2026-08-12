@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { adminDb, FieldValue } from "@/lib/firebase/admin";
 import {
   ROADMAP_VERSION,
@@ -13,7 +14,7 @@ function roadmapsRef(uid: string) {
 }
 
 /** The most recently touched roadmap for a user, or null. */
-export async function getLatestRoadmap(uid: string): Promise<RoadmapDoc | null> {
+async function getLatestRoadmap__impl(uid: string): Promise<RoadmapDoc | null> {
   const snap = await roadmapsRef(uid).orderBy("updatedAt", "desc").limit(1).get();
   if (snap.empty) return null;
   const doc = snap.docs[0]!;
@@ -71,3 +72,6 @@ export async function setMilestoneStatus(
       { merge: true },
     );
 }
+
+/** Request-memoized: dedupes identical per-user reads within a single render (I3). */
+export const getLatestRoadmap = cache(getLatestRoadmap__impl);

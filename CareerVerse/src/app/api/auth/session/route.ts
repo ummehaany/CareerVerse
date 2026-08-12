@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase/admin";
 import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionCookie } from "@/lib/firebase/auth";
 import { ensureUser } from "@/lib/firebase/firestore/users";
+import { notifyWelcome } from "@/lib/email/triggers";
 import { ensureCareerProfile } from "@/lib/firebase/firestore/careerProfiles";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
     const decoded = await adminAuth.verifyIdToken(idToken);
 
     // Account bootstrap: create users/{uid} + careerProfiles/{uid} if absent.
-    await ensureUser({
+    const created = await ensureUser({
       uid: decoded.uid,
       email: decoded.email ?? null,
       displayName: decoded.name ?? null,
       photoURL: decoded.picture ?? null,
+      provider: decoded.firebase?.sign_in_provider ?? null,
     });
+    // First sign-in only: send the one-time welcome email (fire-and-forget).
+    if (created) void notifyWelcome(decoded.uid);
     await ensureCareerProfile(decoded.uid);
 
     const sessionCookie = await createSessionCookie(idToken);

@@ -7,6 +7,7 @@ export const ROUTES = {
   verifyEmail: "/verify-email",
 
   // Authenticated app
+  onboarding: "/onboarding",
   dashboard: "/dashboard",
   assessment: "/assessment",
   recommendations: "/recommendations",
@@ -19,9 +20,14 @@ export const ROUTES = {
   interviews: "/interviews",
   achievements: "/achievements",
   coach: "/coach",
-  mentor: "/mentor",
   profile: "/profile",
+  portfolio: "/portfolio",
   settings: "/settings",
+  about: "/about",
+  skillGap: "/skill-gap",
+  companies: "/companies",
+  analytics: "/analytics",
+  pricing: "/pricing",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;

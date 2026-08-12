@@ -3,54 +3,26 @@ import { getUser } from "@/lib/firebase/firestore/users";
 import { getLatestAssessment } from "@/lib/firebase/firestore/assessments";
 import { getPrimaryResume } from "@/lib/firebase/firestore/resumes";
 import type { ResumeData } from "@/types/resume";
+import { emptyResume, normalizeResume } from "./defaults";
 
 export interface ResumePageData {
   resume: ResumeData;
   exists: boolean;
+  aiConfigured: boolean;
 }
 
-function emptyResume(): ResumeData {
-  return {
-    template: "classic",
-    contact: {
-      fullName: "",
-      headline: "",
-      email: "",
-      phone: "",
-      location: "",
-      website: "",
-      linkedin: "",
-    },
-    summary: "",
-    experience: [],
-    education: [],
-    skills: [],
-    projects: [],
-    certifications: [],
-  };
-}
-
-/** Existing resume, or a draft prefilled from the user's profile. */
+/** Existing resume (normalized), or a draft prefilled from the user's profile. */
 export async function getResumePageData(): Promise<ResumePageData> {
+  const { isAIConfigured } = await import("@/lib/ai");
+  const aiConfigured = isAIConfigured();
+
   const decoded = await verifySession();
-  if (!decoded) return { resume: emptyResume(), exists: false };
+  if (!decoded) return { resume: emptyResume(), exists: false, aiConfigured };
   const uid = decoded.uid;
 
   const existing = await getPrimaryResume(uid);
   if (existing) {
-    return {
-      exists: true,
-      resume: {
-        template: existing.template ?? "classic",
-        contact: existing.contact,
-        summary: existing.summary ?? "",
-        experience: existing.experience ?? [],
-        education: existing.education ?? [],
-        skills: existing.skills ?? [],
-        projects: existing.projects ?? [],
-        certifications: existing.certifications ?? [],
-      },
-    };
+    return { exists: true, aiConfigured, resume: normalizeResume(existing) };
   }
 
   const [user, assessment] = await Promise.all([getUser(uid), getLatestAssessment(uid)]);
@@ -70,7 +42,10 @@ export async function getResumePageData(): Promise<ResumePageData> {
         draft.skills.push(skill);
       }
     }
+    if (assessment.structured.interests?.length) {
+      draft.interests = assessment.structured.interests.slice(0, 6);
+    }
   }
 
-  return { resume: draft, exists: false };
+  return { resume: draft, exists: false, aiConfigured };
 }

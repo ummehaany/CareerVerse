@@ -5,6 +5,7 @@ import type { SessionUser } from "@/types/session";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { MobileNav } from "./mobile-nav";
+import { CosmicBackground } from "./cosmic-background";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,7 +18,8 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="relative min-h-screen">
+      <CosmicBackground />
       <Sidebar
         user={user}
         collapsed={collapsed}
@@ -26,7 +28,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       />
       <MobileNav user={user} open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-      <div className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-[4.5rem]" : "lg:pl-64")}>
+      <div className={cn("relative z-10 transition-[padding] duration-200", collapsed ? "lg:pl-[4.5rem]" : "lg:pl-64")}>
         <Topbar user={user} onMenuClick={() => setMobileOpen(true)} />
         <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>

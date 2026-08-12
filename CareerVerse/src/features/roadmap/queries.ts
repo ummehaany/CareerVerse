@@ -45,6 +45,7 @@ export async function getRoadmapPageData(): Promise<RoadmapPageData> {
         totalEstimatedTime: roadmapDoc.totalEstimatedTime,
         stages: roadmapDoc.stages,
         progress: roadmapDoc.progress ?? {},
+        source: roadmapDoc.provider === "offline" ? "fallback" : "ai",
       }
     : null;
 

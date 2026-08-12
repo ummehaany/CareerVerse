@@ -5,7 +5,9 @@ const answerValueSchema = z.union([z.string(), z.array(z.string()), z.number()])
 
 export const saveProgressSchema = z.object({
   id: z.string().min(1).nullable().optional(),
-  currentStep: z.number().int().min(0).max(50),
+  // Resume pointer. With one-question-per-screen this is a question index, so
+  // the bound is generous enough to cover the full weighted question bank.
+  currentStep: z.number().int().min(0).max(200),
   answers: z.record(z.string(), answerValueSchema),
 });
 

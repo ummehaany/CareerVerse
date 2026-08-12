@@ -17,7 +17,15 @@ import {
 import { cn } from "@/lib/utils";
 
 function formatSalary(salary: CareerRecommendation["salaryRange"]): string {
-  const symbol = salary.currency === "USD" ? "$" : "";
+  const currency = salary.currency.toUpperCase();
+
+  // The offline engine reports Indian pay as ₹ LPA (Lakhs Per Annum).
+  if (currency === "INR") {
+    const lpa = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1));
+    return `₹${lpa(salary.min)} LPA – ₹${lpa(salary.max)} LPA`;
+  }
+
+  const symbol = currency === "USD" ? "$" : "";
   const prefix = symbol ? symbol : `${salary.currency} `;
   const min = salary.min.toLocaleString("en-US");
   const max = salary.max.toLocaleString("en-US");

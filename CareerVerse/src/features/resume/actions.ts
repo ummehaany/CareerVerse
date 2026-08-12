@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/firebase/auth";
 import { savePrimaryResume } from "@/lib/firebase/firestore/resumes";
+import { notifyResumeMilestone, syncAchievements } from "@/lib/email/triggers";
 import { resumeDataSchema } from "./schema";
 import { ROUTES } from "@/config/routes";
 
@@ -16,6 +17,11 @@ export async function saveResume(input: unknown): Promise<SaveResumeResult> {
 
     const parsed = resumeDataSchema.parse(input);
     await savePrimaryResume(decoded.uid, parsed);
+
+    // Milestone email fires only when a completion threshold is newly crossed
+    // (per-level dedupe) — autosaves never spam. Fire-and-forget.
+    void notifyResumeMilestone(decoded.uid, parsed);
+    void syncAchievements(decoded.uid);
 
     revalidatePath(ROUTES.dashboard);
     return { ok: true };

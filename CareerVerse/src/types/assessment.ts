@@ -1,7 +1,7 @@
 import type { FirestoreTimestamp } from "./user";
 
 /** Bump when the question set changes so stored attempts stay interpretable. */
-export const ASSESSMENT_VERSION = 1;
+export const ASSESSMENT_VERSION = 2;
 
 /** A single answer value. Multi-selects are string[]; scales are number. */
 export type AnswerValue = string | string[] | number;

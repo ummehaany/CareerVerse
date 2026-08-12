@@ -6,6 +6,7 @@ import { navForRole } from "@/config/nav";
 import { NavItem } from "./nav-item";
 import { Avatar } from "@/components/ui/avatar";
 import { ChevronRightIcon } from "@/components/ui/icon";
+import { Logo, BrandMark } from "@/components/ui/logo";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +37,16 @@ export function Sidebar({
           collapsed && "justify-center px-0",
         )}
       >
-        <Link href={ROUTES.dashboard} className="flex items-center gap-2 font-bold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            C
-          </span>
-          {!collapsed && <span>CareerVerse</span>}
+        <Link
+          href={ROUTES.dashboard}
+          aria-label="CareerVerse AI — go to dashboard"
+          className="flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          {collapsed ? (
+            <BrandMark size={36} priority />
+          ) : (
+            <Logo size={32} priority textClassName="text-[15px]" />
+          )}
         </Link>
       </div>
 

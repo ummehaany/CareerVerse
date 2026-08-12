@@ -5,15 +5,18 @@ import { ROUTES } from "@/config/routes";
 export function WelcomeBanner({
   name,
   onboardingComplete,
+  isFirstSession = false,
 }: {
   name: string;
   onboardingComplete: boolean;
+  /** True only for the account's first-ever session — see dashboard/queries.ts. */
+  isFirstSession?: boolean;
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-background p-6 sm:p-8">
       <p className="text-sm font-medium text-primary">Dashboard</p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-        Welcome back, {name}
+        {isFirstSession ? `Welcome to CareerVerse, ${name}` : `Welcome back, ${name}`}
       </h1>
       <p className="mt-2 max-w-xl text-sm text-muted">
         Your career journey lives here — discover roles, plan your learning, prepare for interviews,

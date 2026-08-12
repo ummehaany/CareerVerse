@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/firebase/auth";
 import { ROUTES } from "@/config/routes";
+import { Logo } from "@/components/ui/logo";
 
 export default async function AuthLayout({ children }: { children: ReactNode }) {
   // Already signed in? Skip the auth pages.
@@ -14,9 +15,10 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
       <div className="w-full max-w-md">
         <Link
           href={ROUTES.home}
-          className="mb-8 block text-center text-xl font-bold tracking-tight"
+          aria-label="CareerVerse AI home"
+          className="mb-8 flex justify-center"
         >
-          CareerVerse
+          <Logo size={40} priority textClassName="text-xl" />
         </Link>
         {children}
       </div>

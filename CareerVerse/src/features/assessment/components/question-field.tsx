@@ -85,7 +85,7 @@ export function QuestionField({
   return (
     <fieldset
       className={cn(
-        "rounded-2xl border bg-background p-5 transition-colors sm:p-6",
+        "rounded-2xl border bg-background/80 p-5 shadow-xl shadow-black/[0.04] backdrop-blur-xl transition-colors sm:p-6",
         invalid ? "border-danger/40" : "border-border",
       )}
       aria-describedby={invalid ? errorId : undefined}

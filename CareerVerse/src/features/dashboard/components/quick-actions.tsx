@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { QUICK_ACTIONS } from "../config";
+import { QUICK_ACTIONS, type QuickAction } from "../config";
 
-export function QuickActions() {
+/** Defaults to the full action list; the dashboard passes a trimmed early-stage subset pre-Career-Discovery. */
+export function QuickActions({ actions = QUICK_ACTIONS }: { actions?: QuickAction[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {QUICK_ACTIONS.map((action) => {
+      {actions.map((action) => {
         const Icon = action.icon;
         return (
           <Link

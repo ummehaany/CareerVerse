@@ -13,6 +13,11 @@ import {
   SparklesIcon,
   UserIcon,
   SettingsIcon,
+  HeartIcon,
+  PuzzleIcon,
+  BriefcaseIcon,
+  RocketIcon,
+  ChartIcon,
 } from "@/components/ui/icon";
 import { AwardIcon } from "@/components/ui/icons-extended";
 import type { UserRole } from "@/types/user";
@@ -42,9 +47,10 @@ export const navGroups: NavGroup[] = [
     key: "main",
     items: [
       { key: "dashboard", label: "Dashboard", href: ROUTES.dashboard, icon: HomeIcon },
-      { key: "assessment", label: "Career Assessment", href: ROUTES.assessment, icon: CompassIcon },
+      { key: "assessment", label: "Career Discovery", href: ROUTES.assessment, icon: CompassIcon },
       { key: "careers", label: "Explore Careers", href: ROUTES.careers, icon: GlobeIcon },
       { key: "recommendations", label: "Career Matches", href: ROUTES.recommendations, icon: TargetIcon },
+      { key: "companies", label: "Target Companies", href: ROUTES.companies, icon: RocketIcon },
       { key: "roadmap", label: "Learning Roadmap", href: ROUTES.roadmap, icon: RouteIcon },
       { key: "learning", label: "Learning Hub", href: ROUTES.learning, icon: BookIcon },
       { key: "resume", label: "Resume Builder", href: ROUTES.resume, icon: FileTextIcon },
@@ -58,6 +64,8 @@ export const navGroups: NavGroup[] = [
     items: [
       { key: "timeline", label: "Career Timeline", href: ROUTES.timeline, icon: ClockIcon },
       { key: "achievements", label: "Achievements", href: ROUTES.achievements, icon: AwardIcon },
+      { key: "skillgap", label: "Skill Gap", href: ROUTES.skillGap, icon: PuzzleIcon },
+      { key: "analytics", label: "Analytics", href: ROUTES.analytics, icon: ChartIcon },
     ],
   },
   {
@@ -65,7 +73,9 @@ export const navGroups: NavGroup[] = [
     label: "Account",
     items: [
       { key: "profile", label: "Profile", href: ROUTES.profile, icon: UserIcon },
+      { key: "portfolio", label: "Portfolio", href: ROUTES.portfolio, icon: BriefcaseIcon },
       { key: "settings", label: "Settings", href: ROUTES.settings, icon: SettingsIcon },
+      { key: "about", label: "About", href: ROUTES.about, icon: HeartIcon },
     ],
   },
 ];

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InterviewDifficulty } from "@/types/interview";
+import type { InterviewDifficulty, InterviewDimensions, InterviewType } from "@/types/interview";
 import type { TokenUsage } from "../types";
 import { getAIProvider } from "../index";
 import {
@@ -25,10 +25,7 @@ const QUESTIONS_RESPONSE_SCHEMA: Record<string, unknown> = {
       type: "ARRAY",
       items: {
         type: "OBJECT",
-        properties: {
-          question: { type: "STRING" },
-          focusArea: { type: "STRING" },
-        },
+        properties: { question: { type: "STRING" }, focusArea: { type: "STRING" } },
         required: ["question", "focusArea"],
       },
     },
@@ -52,11 +49,13 @@ export async function generateInterviewQuestions(
   role: string,
   difficulty: InterviewDifficulty,
   count: number,
+  type: InterviewType,
+  memoryContext?: string,
 ): Promise<QuestionsResult> {
   const provider = getAIProvider();
   const { data, usage } = await provider.generateObject(questionsSchema, {
     system: buildQuestionsSystemPrompt(),
-    prompt: buildQuestionsUserPrompt(role, difficulty, count),
+    prompt: buildQuestionsUserPrompt(role, difficulty, count, type) + (memoryContext ? `\n\n${memoryContext}` : ""),
     temperature: 0.7,
     maxOutputTokens: 2000,
     responseSchema: QUESTIONS_RESPONSE_SCHEMA,
@@ -72,6 +71,13 @@ export async function generateInterviewQuestions(
 
 // ── Answer evaluation ──────────────────────────────────────────────────────
 
+const dimensionsSchema = z.object({
+  communication: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  technical: z.number().min(0).max(100),
+  problemSolving: z.number().min(0).max(100),
+});
+
 const evaluationSchema = z.object({
   items: z.array(
     z.object({
@@ -84,6 +90,8 @@ const evaluationSchema = z.object({
   summary: z.string().min(1),
   strengths: z.array(z.string()),
   improvements: z.array(z.string()),
+  dimensions: dimensionsSchema,
+  nextSteps: z.array(z.string()),
 });
 
 const EVALUATION_RESPONSE_SCHEMA: Record<string, unknown> = {
@@ -105,8 +113,19 @@ const EVALUATION_RESPONSE_SCHEMA: Record<string, unknown> = {
     summary: { type: "STRING" },
     strengths: { type: "ARRAY", items: { type: "STRING" } },
     improvements: { type: "ARRAY", items: { type: "STRING" } },
+    dimensions: {
+      type: "OBJECT",
+      properties: {
+        communication: { type: "NUMBER" },
+        confidence: { type: "NUMBER" },
+        technical: { type: "NUMBER" },
+        problemSolving: { type: "NUMBER" },
+      },
+      required: ["communication", "confidence", "technical", "problemSolving"],
+    },
+    nextSteps: { type: "ARRAY", items: { type: "STRING" } },
   },
-  required: ["items", "overallScore", "summary", "strengths", "improvements"],
+  required: ["items", "overallScore", "summary", "strengths", "improvements", "dimensions", "nextSteps"],
 };
 
 export interface EvaluationCoreItem {
@@ -121,20 +140,26 @@ export interface EvaluationResult {
   summary: string;
   strengths: string[];
   improvements: string[];
+  dimensions: InterviewDimensions;
+  nextSteps: string[];
   provider: string;
   model: string;
   usage: TokenUsage;
 }
 
+const clamp100 = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
 export async function evaluateInterview(
   role: string,
   difficulty: InterviewDifficulty,
+  type: InterviewType,
   qa: Array<{ question: string; answer: string; focusArea: string }>,
+  memoryContext?: string,
 ): Promise<EvaluationResult> {
   const provider = getAIProvider();
   const { data, usage } = await provider.generateObject(evaluationSchema, {
     system: buildEvaluationSystemPrompt(),
-    prompt: buildEvaluationUserPrompt(role, difficulty, qa),
+    prompt: buildEvaluationUserPrompt(role, difficulty, type, qa) + (memoryContext ? `\n\n${memoryContext}` : ""),
     temperature: 0.4,
     maxOutputTokens: 3000,
     responseSchema: EVALUATION_RESPONSE_SCHEMA,
@@ -146,10 +171,17 @@ export async function evaluateInterview(
       score: Math.max(0, Math.min(10, Math.round(item.score))),
       feedback: item.feedback.trim(),
     })),
-    overallScore: Math.max(0, Math.min(100, Math.round(data.overallScore))),
+    overallScore: clamp100(data.overallScore),
     summary: data.summary.trim(),
     strengths: data.strengths.map((s) => s.trim()).filter(Boolean),
     improvements: data.improvements.map((s) => s.trim()).filter(Boolean),
+    dimensions: {
+      communication: clamp100(data.dimensions.communication),
+      confidence: clamp100(data.dimensions.confidence),
+      technical: clamp100(data.dimensions.technical),
+      problemSolving: clamp100(data.dimensions.problemSolving),
+    },
+    nextSteps: data.nextSteps.map((s) => s.trim()).filter(Boolean),
     provider: provider.name,
     model: provider.model,
     usage,

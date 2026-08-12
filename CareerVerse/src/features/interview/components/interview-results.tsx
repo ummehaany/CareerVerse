@@ -4,25 +4,36 @@ import type { InterviewEvaluation, InterviewQuestion } from "@/types/interview";
 import { ScoreRing } from "./score-ring";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SparklesIcon, TargetIcon, CheckIcon } from "@/components/ui/icon";
+import { Progress } from "@/components/ui/progress";
+import { SparklesIcon, TargetIcon, CheckIcon, RocketIcon, ArrowRightIcon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
 function scoreColor(score: number): string {
   return score >= 7.5 ? "var(--success)" : score >= 5 ? "var(--primary)" : score >= 3 ? "var(--warning)" : "var(--danger)";
 }
 
+const DIMENSION_META: Array<{ key: keyof NonNullable<InterviewEvaluation["dimensions"]>; label: string }> = [
+  { key: "communication", label: "Communication" },
+  { key: "confidence", label: "Confidence" },
+  { key: "technical", label: "Technical accuracy" },
+  { key: "problemSolving", label: "Problem-solving" },
+];
+
 export function InterviewResults({
   role,
   questions,
   evaluation,
+  source,
   onNew,
 }: {
   role: string;
   questions: InterviewQuestion[];
   evaluation: InterviewEvaluation;
+  source?: "ai" | "offline";
   onNew: () => void;
 }) {
   const byId = new Map(questions.map((q) => [q.id, q]));
+  const dims = evaluation.dimensions;
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -30,12 +41,32 @@ export function InterviewResults({
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
           <ScoreRing value={evaluation.overallScore} />
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-subtle">Results · {role}</p>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <p className="text-xs font-medium uppercase tracking-wide text-subtle">Results · {role}</p>
+              {source === "offline" && <Badge variant="muted">Instant scoring</Badge>}
+            </div>
             <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Interview scored</h1>
             <p className="mt-1 max-w-xl text-sm text-muted">{evaluation.summary}</p>
           </div>
         </div>
       </section>
+
+      {dims && (
+        <section className="rounded-2xl border border-border bg-background p-5">
+          <h2 className="text-sm font-semibold tracking-tight">Skill breakdown</h2>
+          <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+            {DIMENSION_META.map((d) => (
+              <div key={d.key} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">{d.label}</span>
+                  <span className="font-medium tabular-nums">{dims[d.key]}%</span>
+                </div>
+                <Progress value={dims[d.key]} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-background p-5">
@@ -70,6 +101,23 @@ export function InterviewResults({
         </div>
       </div>
 
+      {evaluation.nextSteps && evaluation.nextSteps.length > 0 && (
+        <section className="rounded-2xl border border-border bg-background p-5">
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            <RocketIcon size={16} className="text-primary" />
+            Suggested next steps
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {evaluation.nextSteps.map((s) => (
+              <li key={s} className="flex items-start gap-2 text-sm text-muted">
+                <ArrowRightIcon size={15} className="mt-0.5 shrink-0 text-primary" />
+                {s}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle">Per-question feedback</h2>
         <div className="space-y-3">
@@ -80,9 +128,7 @@ export function InterviewResults({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="mb-1.5 flex items-center gap-2">
-                      <span className="text-sm font-semibold text-subtle tabular-nums">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
+                      <span className="text-sm font-semibold text-subtle tabular-nums">{String(index + 1).padStart(2, "0")}</span>
                       {question && <Badge variant="muted">{question.focusArea}</Badge>}
                     </div>
                     <p className="font-medium">{question?.question}</p>
@@ -96,10 +142,7 @@ export function InterviewResults({
                 </div>
                 <div className="mt-3">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-                    <div
-                      className={cn("h-full rounded-full")}
-                      style={{ width: `${item.score * 10}%`, backgroundColor: scoreColor(item.score) }}
-                    />
+                    <div className={cn("h-full rounded-full")} style={{ width: `${item.score * 10}%`, backgroundColor: scoreColor(item.score) }} />
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-muted">{item.feedback}</p>

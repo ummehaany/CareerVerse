@@ -9,7 +9,11 @@ import {
   FileTextIcon,
   MicIcon,
   SparklesIcon,
+  RocketIcon,
+  ClockIcon,
+  PuzzleIcon,
 } from "@/components/ui/icon";
+import { AwardIcon } from "@/components/ui/icons-extended";
 import { ROUTES } from "@/config/routes";
 import type { CareerProfile } from "@/types/career-profile";
 
@@ -28,10 +32,22 @@ export interface FeatureSection {
   accentVar: string;
 }
 
+/*
+ * Progressive disclosure: before Career Discovery is complete, the dashboard
+ * shows only the subset of features that are genuinely useful without a
+ * career direction yet (assessment, resume, general exploration). The rest —
+ * Career Matches, Roadmap, Mock Interviews — depend on a direction Career
+ * Discovery hasn't produced yet, and reappear on the dashboard once it has.
+ * Nothing here is disabled or removed: every feature stays reachable through
+ * the normal sidebar navigation regardless of stage.
+ */
+export const EARLY_FEATURE_KEYS: readonly string[] = ["assessment", "learning", "resume"];
+export const EARLY_QUICK_ACTION_KEYS: readonly string[] = ["assessment", "careers", "resume", "coach"];
+
 export const FEATURE_SECTIONS: FeatureSection[] = [
   {
     key: "assessment",
-    title: "Career Assessment",
+    title: "Career Discovery",
     description: "Answer a short questionnaire to build your AI career profile.",
     href: ROUTES.assessment,
     cta: "Open assessment",
@@ -45,6 +61,15 @@ export const FEATURE_SECTIONS: FeatureSection[] = [
     href: ROUTES.recommendations,
     cta: "View matches",
     icon: TargetIcon,
+    accentVar: "--accent-mentor",
+  },
+  {
+    key: "companies",
+    title: "Target Companies",
+    description: "Track your readiness against the companies you're targeting.",
+    href: ROUTES.companies,
+    cta: "View companies",
+    icon: RocketIcon,
     accentVar: "--accent-mentor",
   },
   {
@@ -83,6 +108,33 @@ export const FEATURE_SECTIONS: FeatureSection[] = [
     icon: MicIcon,
     accentVar: "--accent-assessment",
   },
+  {
+    key: "timeline",
+    title: "Career Timeline",
+    description: "See your career journey mapped as milestones over time.",
+    href: ROUTES.timeline,
+    cta: "View timeline",
+    icon: ClockIcon,
+    accentVar: "--accent-roadmap",
+  },
+  {
+    key: "achievements",
+    title: "Achievements",
+    description: "Badges and milestones you've unlocked along the way.",
+    href: ROUTES.achievements,
+    cta: "View achievements",
+    icon: AwardIcon,
+    accentVar: "--accent-resume",
+  },
+  {
+    key: "skillgap",
+    title: "Skill Gap",
+    description: "See where your skills fall short of your target role.",
+    href: ROUTES.skillGap,
+    cta: "View skill gap",
+    icon: PuzzleIcon,
+    accentVar: "--accent-interview",
+  },
 ];
 
 export interface QuickAction {
@@ -102,6 +154,16 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { key: "interviews", label: "Interview", href: ROUTES.interviews, icon: MicIcon },
   { key: "coach", label: "AI Coach", href: ROUTES.coach, icon: SparklesIcon },
 ];
+
+/** Early-stage subset of the "Explore CareerVerse" cards (see progressive-disclosure note above). */
+export const EARLY_FEATURE_SECTIONS: FeatureSection[] = FEATURE_SECTIONS.filter((f) =>
+  EARLY_FEATURE_KEYS.includes(f.key),
+);
+
+/** Early-stage subset of Quick Actions (see progressive-disclosure note above). */
+export const EARLY_QUICK_ACTIONS: QuickAction[] = QUICK_ACTIONS.filter((a) =>
+  EARLY_QUICK_ACTION_KEYS.includes(a.key),
+);
 
 export interface OverviewStat {
   key: string;

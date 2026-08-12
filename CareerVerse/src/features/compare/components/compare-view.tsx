@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { ComparePageData } from "../queries";
 import type { Career } from "@/lib/careers/types";
-import { formatSalaryRange, demandVariant } from "@/features/careers/format";
+import { formatCareerSalary, demandVariant } from "@/features/careers/format";
 import { computeSkillGap } from "@/features/careers/analysis";
 import { SectionHeading } from "@/components/shared/state-panels";
 import { Select } from "@/components/ui/select";
@@ -107,7 +107,11 @@ export function CompareView({ data }: { data: ComparePageData }) {
             </thead>
             <tbody>
               <Row label="Category" a={a.category} b={b.category} />
-              <Row label="Salary (illustrative)" a={formatSalaryRange(a.salary)} b={formatSalaryRange(b.salary)} />
+              <Row
+                label="Salary in India (illustrative)"
+                a={formatCareerSalary(a, "INR")}
+                b={formatCareerSalary(b, "INR")}
+              />
               <Row
                 label="Demand"
                 a={<Badge variant={demandVariant(a.demand)}>{a.demand}</Badge>}

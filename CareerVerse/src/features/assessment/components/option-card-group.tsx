@@ -67,7 +67,7 @@ export function OptionCardGroup({
               "group relative flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-150",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               isSelected
-                ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_70%,transparent)]"
                 : "border-border bg-background hover:border-foreground/25 hover:bg-foreground/[0.02]",
               disabled && "cursor-not-allowed opacity-45 hover:border-border hover:bg-background",
             )}

@@ -92,7 +92,7 @@ function RoadmapContent({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       <RoadmapHeader
         careerTitle={roadmap.careerTitle}
         overview={roadmap.overview}
@@ -101,6 +101,7 @@ function RoadmapContent({
         completedCount={completedCount}
         totalMilestones={totalMilestones}
         onNew={onNew}
+        source={roadmap.source}
       />
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -195,12 +196,6 @@ export function RoadmapView({ data }: { data: RoadmapPageData }) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageIntro />
-      {!data.aiConfigured && (
-        <Alert variant="info">
-          AI isn&apos;t configured yet. Add a <span className="font-medium">GEMINI_API_KEY</span> to
-          your environment to generate roadmaps.
-        </Alert>
-      )}
       {error && <Alert variant="error">{error}</Alert>}
       <CareerPicker options={data.careerOptions} onGenerate={handleGenerate} generating={generating} />
       {data.roadmap && (

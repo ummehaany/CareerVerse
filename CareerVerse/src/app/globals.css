@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
+/* Retarget Tailwind's dark: variant from the OS media query to the
+ * explicit data-theme attribute so user theme choice controls dark: utilities. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Design tokens — CareerVerse.
- * Palette derived from the validated data-viz reference palette (light/dark
- * both selected, not auto-flipped). `background`/`foreground` are kept from the
- * Phase 1 scaffold so existing primitives (Card, Button, auth pages) are
- * unchanged; everything below is additive.
+ * Palette derived from the validated data-viz reference palette. Light is the
+ * :root default; dark is applied via `data-theme="dark"` on <html> (set before
+ * paint by the theme init script), and accent colors override --primary via
+ * `data-accent`. Single source per token — no duplicated rules.
  */
 :root {
   --background: #ffffff; /* card / raised surface */
@@ -47,35 +51,58 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #141414; /* card surface */
-    --foreground: #ededed;
+/* Dark theme — applied via <html data-theme="dark">. */
+:root[data-theme="dark"] {
+  --background: #141414; /* card surface */
+  --foreground: #ededed;
 
-    --surface: #0b0b0b; /* page plane */
-    --muted: #a8a7a1;
-    --subtle: #7d7c77;
-    --border: rgba(255, 255, 255, 0.1);
+  --surface: #0b0b0b; /* page plane */
+  --muted: #a8a7a1;
+  --subtle: #7d7c77;
+  --border: rgba(255, 255, 255, 0.1);
 
-    --primary: #3987e5;
-    --primary-foreground: #0a0a0a;
+  --primary: #3987e5;
+  --primary-foreground: #0a0a0a;
 
-    --success: #17a917;
-    --warning: #e0a013;
-    --danger: #e05252;
+  --success: #17a917;
+  --warning: #e0a013;
+  --danger: #e05252;
 
-    --accent-assessment: #3987e5;
-    --accent-roadmap: #199e70;
-    --accent-resume: #9085e9;
-    --accent-interview: #e0703f;
-    --accent-mentor: #d55181;
-  }
+  --accent-assessment: #3987e5;
+  --accent-roadmap: #199e70;
+  --accent-resume: #9085e9;
+  --accent-interview: #e0703f;
+  --accent-mentor: #d55181;
 }
+
+/*
+ * Accent colors — override only --primary / --primary-foreground.
+ * Blue is the built-in default (no rule). Dark rules use higher specificity so
+ * they win over the dark base above regardless of source order.
+ */
+:root[data-accent="purple"] { --primary: #7c3aed; --primary-foreground: #ffffff; }
+:root[data-accent="emerald"] { --primary: #059669; --primary-foreground: #ffffff; }
+:root[data-accent="orange"] { --primary: #ea580c; --primary-foreground: #ffffff; }
+:root[data-accent="rose"] { --primary: #e11d48; --primary-foreground: #ffffff; }
+:root[data-accent="indigo"] { --primary: #4f46e5; --primary-foreground: #ffffff; }
+
+:root[data-theme="dark"][data-accent="purple"] { --primary: #a78bfa; --primary-foreground: #1a1030; }
+:root[data-theme="dark"][data-accent="emerald"] { --primary: #34d399; --primary-foreground: #05261c; }
+:root[data-theme="dark"][data-accent="orange"] { --primary: #fb923c; --primary-foreground: #241200; }
+:root[data-theme="dark"][data-accent="rose"] { --primary: #fb7185; --primary-foreground: #2a0a12; }
+:root[data-theme="dark"][data-accent="indigo"] { --primary: #818cf8; --primary-foreground: #0f1030; }
 
 body {
   background: var(--surface);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Accessible, visible keyboard focus. Components that manage their own focus
+ * ring use `outline-none` and override this; everything else gets a clear ring. */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 2px;
 }
 
 /* Subtle entrance animations (kept minimal; disabled under reduced-motion). */
@@ -105,6 +132,19 @@ body {
 
 .animate-fade-in {
   animation: cv-fade-in 0.35s ease both;
+}
+
+/* Smooth cross-fade during a theme/accent change (added briefly by the theme
+ * controller, then removed, so it never affects the initial paint). */
+:root[data-theme-transition] *,
+:root[data-theme-transition] *::before,
+:root[data-theme-transition] *::after {
+  transition:
+    background-color 0.28s ease,
+    border-color 0.28s ease,
+    color 0.28s ease,
+    fill 0.28s ease,
+    stroke 0.28s ease !important;
 }
 
 /* Respect users who prefer reduced motion. */
@@ -142,4 +182,394 @@ body {
     box-shadow: none;
     padding: 24px;
   }
+}
+
+/* Resume Builder live-preview zoom (neutralized for print/PDF export). */
+.rb-zoom {
+  transform: scale(var(--rb-zoom, 1));
+  transform-origin: top center;
+}
+@media print {
+  .rb-zoom {
+    transform: none !important;
+  }
+}
+
+/* ── Premium polish (presentational only) ───────────────────────────────────*/
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+/* Themed, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 22%, transparent) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--foreground) 16%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--foreground) 30%, transparent);
+  background-clip: padding-box;
+}
+
+/* Route transition — applied by (app)/template.tsx on every navigation. */
+@keyframes cv-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.cv-page-enter {
+  animation: cv-page-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Shimmer skeleton — used by the Skeleton primitive. */
+@keyframes cv-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.cv-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.cv-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--foreground) 7%, transparent),
+    transparent
+  );
+  animation: cv-shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .cv-skeleton::after {
+    animation: none;
+  }
+}
+
+/* ── CareerVerse cosmic identity ────────────────────────────────────────────
+ * Subtle "exploring a universe" backdrop rendered once behind the app shell.
+ * Sits on a solid --surface base so text contrast is unchanged. Tuning vars
+ * are dialed up in dark theme. All motion is disabled under reduced-motion. */
+.cv-cosmos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--surface);
+  /* tuning (light defaults) */
+  --neb-opacity: 0.32;
+  --star-opacity: 0.16;
+  --line-opacity: 0.05;
+  --glow-opacity: 0.1;
+}
+:root[data-theme="dark"] .cv-cosmos {
+  --neb-opacity: 0.8;
+  --star-opacity: 0.6;
+  --line-opacity: 0.12;
+  --glow-opacity: 0.18;
+}
+
+.cv-cosmos > * {
+  position: absolute;
+}
+
+/* Nebula — soft accent clouds, slow independent drift (far layer, no parallax) */
+.cv-cosmos-nebula {
+  inset: -12%;
+  opacity: var(--neb-opacity);
+  filter: blur(34px) saturate(1.05);
+  background:
+    radial-gradient(38% 48% at 18% 22%, color-mix(in srgb, var(--accent-assessment) 34%, transparent), transparent 70%),
+    radial-gradient(42% 52% at 82% 28%, color-mix(in srgb, var(--accent-mentor) 30%, transparent), transparent 72%),
+    radial-gradient(48% 58% at 68% 82%, color-mix(in srgb, var(--accent-roadmap) 26%, transparent), transparent 72%),
+    radial-gradient(40% 50% at 26% 84%, color-mix(in srgb, var(--accent-resume) 26%, transparent), transparent 72%);
+  animation: cv-neb 90s ease-in-out infinite alternate;
+}
+
+/* Ambient glow blobs — parallax + gentle pulse */
+.cv-cosmos-glow {
+  border-radius: 9999px;
+  opacity: var(--glow-opacity);
+}
+.cv-cosmos-glow-a {
+  width: 48vw;
+  height: 48vw;
+  left: -10vw;
+  top: -8vw;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 75%, transparent), transparent 70%);
+  transform: translate3d(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 26px), 0);
+  animation: cv-glow 16s ease-in-out infinite;
+}
+.cv-cosmos-glow-b {
+  width: 42vw;
+  height: 42vw;
+  right: -12vw;
+  bottom: -10vw;
+  left: auto;
+  top: auto;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-mentor) 60%, transparent), transparent 70%);
+  transform: translate3d(calc(var(--px, 0) * -20px), calc(var(--py, 0) * -20px), 0);
+  animation: cv-glow 20s ease-in-out infinite 2s;
+}
+
+/* Star field — three depths; parallax (transform) + drift (bg-position) + twinkle (filter) */
+.cv-cosmos-stars {
+  inset: -12%;
+  background-repeat: repeat;
+  opacity: var(--star-opacity);
+}
+.cv-cosmos-stars-1 {
+  background-image:
+    radial-gradient(1.4px 1.4px at 24px 32px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 140px 88px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 200px, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 210px 160px, #fff, transparent),
+    radial-gradient(1px 1px at 40px 240px, #fff, transparent);
+  background-size: 260px 260px;
+  transform: translate3d(calc(var(--px, 0) * 22px), calc(var(--py, 0) * 22px), 0);
+  animation: cv-drift-a 150s linear infinite, cv-twinkle 6s ease-in-out infinite;
+}
+.cv-cosmos-stars-2 {
+  background-image:
+    radial-gradient(1.8px 1.8px at 60px 50px, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 300px 180px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 200px 320px, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 360px 300px, #fff, transparent);
+  background-size: 400px 400px;
+  transform: translate3d(calc(var(--px, 0) * 14px), calc(var(--py, 0) * 14px), 0);
+  animation: cv-drift-b 210s linear infinite, cv-twinkle 8s ease-in-out infinite 1s;
+}
+.cv-cosmos-stars-3 {
+  background-image:
+    radial-gradient(2.4px 2.4px at 120px 120px, #fff, transparent),
+    radial-gradient(2px 2px at 420px 380px, #fff, transparent),
+    radial-gradient(1.8px 1.8px at 300px 500px, #fff, transparent);
+  background-size: 560px 560px;
+  transform: translate3d(calc(var(--px, 0) * 8px), calc(var(--py, 0) * 8px), 0);
+  animation: cv-drift-a 280s linear infinite;
+}
+
+/* Constellations */
+.cv-cosmos-lines {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--primary);
+  opacity: var(--line-opacity);
+  transform: translate3d(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 12px), 0);
+  animation: cv-lines 12s ease-in-out infinite;
+}
+
+/* Floating particles */
+.cv-cosmos-particles {
+  inset: 0;
+  transform: translate3d(calc(var(--px, 0) * 30px), calc(var(--py, 0) * 30px), 0);
+}
+.cv-particle {
+  position: absolute;
+  bottom: -6%;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--primary) 80%, #fff);
+  opacity: 0;
+  animation: cv-float 22s linear infinite;
+}
+.cv-particle-0 { left: 12%; width: 3px; height: 3px; animation-duration: 26s; animation-delay: 0s; }
+.cv-particle-1 { left: 28%; width: 5px; height: 5px; animation-duration: 20s; animation-delay: 3s; }
+.cv-particle-2 { left: 44%; width: 3px; height: 3px; animation-duration: 30s; animation-delay: 6s; }
+.cv-particle-3 { left: 60%; width: 4px; height: 4px; animation-duration: 24s; animation-delay: 1.5s; }
+.cv-particle-4 { left: 76%; width: 5px; height: 5px; animation-duration: 28s; animation-delay: 4.5s; }
+.cv-particle-5 { left: 90%; width: 3px; height: 3px; animation-duration: 23s; animation-delay: 8s; }
+
+@keyframes cv-neb {
+  0% { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  100% { transform: translate3d(2%, 1.5%, 0) scale(1.06); }
+}
+@keyframes cv-glow {
+  0%, 100% { filter: blur(80px) opacity(0.75); }
+  50% { filter: blur(92px) opacity(1); }
+}
+@keyframes cv-twinkle {
+  0%, 100% { filter: opacity(0.6); }
+  50% { filter: opacity(1); }
+}
+@keyframes cv-drift-a { to { background-position: 260px 420px; } }
+@keyframes cv-drift-b { to { background-position: -320px 500px; } }
+@keyframes cv-lines {
+  0%, 100% { opacity: calc(var(--line-opacity) * 0.7); }
+  50% { opacity: var(--line-opacity); }
+}
+@keyframes cv-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(-108vh) translateX(24px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-cosmos-nebula,
+  .cv-cosmos-glow,
+  .cv-cosmos-stars,
+  .cv-cosmos-lines,
+  .cv-particle {
+    animation: none !important;
+  }
+  .cv-particle { opacity: 0.5; }
+}
+
+/* Global search panel entrance (presentational; disabled under reduced motion). */
+@keyframes cv-search-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.cv-search-panel {
+  animation: cv-search-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-search-panel { animation: none; }
+}
+
+/* ── Career Assessment atmosphere (immersive, subtle, readable) ──────────────*/
+.cv-assess {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* light defaults — whisper-subtle so contrast is untouched */
+  --assess-neb: 0.26;
+  --assess-star: 0.16;
+  --assess-glow: 0.28;
+}
+:root[data-theme="dark"] .cv-assess {
+  --assess-neb: 0.5;
+  --assess-star: 0.55;
+  --assess-glow: 0.5;
+}
+.cv-assess > * { position: absolute; }
+
+.cv-assess-nebula {
+  border-radius: 9999px;
+  filter: blur(64px);
+  opacity: var(--assess-neb);
+}
+.cv-assess-nebula-a {
+  width: 48vw;
+  height: 48vw;
+  left: -10vw;
+  top: -8vw;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-assessment) 42%, transparent), transparent 68%);
+  animation: cv-assess-drift-a 28s ease-in-out infinite alternate;
+}
+.cv-assess-nebula-b {
+  width: 44vw;
+  height: 44vw;
+  right: -12vw;
+  bottom: -10vw;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-mentor) 34%, transparent), transparent 70%);
+  animation: cv-assess-drift-b 34s ease-in-out infinite alternate;
+}
+.cv-assess-glow {
+  left: 50%;
+  top: 4%;
+  width: 64vw;
+  height: 42vh;
+  transform: translateX(-50%);
+  background: radial-gradient(55% 55% at 50% 0%, color-mix(in srgb, var(--primary) 24%, transparent), transparent 72%);
+  opacity: var(--assess-glow);
+  filter: blur(34px);
+}
+.cv-assess-stars {
+  inset: 0;
+  opacity: var(--assess-star);
+  background-repeat: repeat;
+  background-size: 340px 340px;
+  background-image:
+    radial-gradient(1.4px 1.4px at 15% 18%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 62% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 70%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 82% 58%, #fff, transparent),
+    radial-gradient(1px 1px at 25% 88%, #fff, transparent);
+  animation: cv-assess-twinkle 6.5s ease-in-out infinite;
+}
+.cv-assess-particles { inset: 0; }
+.cv-ap {
+  bottom: -5%;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--primary) 80%, #fff);
+  opacity: 0;
+  animation: cv-assess-float 22s linear infinite;
+}
+.cv-ap-0 { left: 16%; width: 3px; height: 3px; animation-duration: 26s; animation-delay: 0s; }
+.cv-ap-1 { left: 38%; width: 5px; height: 5px; animation-duration: 20s; animation-delay: 4s; }
+.cv-ap-2 { left: 60%; width: 3px; height: 3px; animation-duration: 28s; animation-delay: 8s; }
+.cv-ap-3 { left: 82%; width: 4px; height: 4px; animation-duration: 24s; animation-delay: 2.5s; }
+
+@keyframes cv-assess-drift-a {
+  0% { transform: translate3d(-2%, -1%, 0) scale(1); }
+  100% { transform: translate3d(2%, 2%, 0) scale(1.08); }
+}
+@keyframes cv-assess-drift-b {
+  0% { transform: translate3d(2%, 1%, 0) scale(1.04); }
+  100% { transform: translate3d(-2%, -2%, 0) scale(1); }
+}
+@keyframes cv-assess-twinkle {
+  0%, 100% { filter: opacity(0.65); }
+  50% { filter: opacity(1); }
+}
+@keyframes cv-assess-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  12% { opacity: 0.7; }
+  88% { opacity: 0.7; }
+  100% { transform: translateY(-104vh) translateX(20px); opacity: 0; }
+}
+
+/* Per-question entrance for the assessment flow. */
+@keyframes cv-q-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.cv-q-enter { animation: cv-q-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-assess-nebula,
+  .cv-assess-glow,
+  .cv-assess-stars,
+  .cv-ap,
+  .cv-q-enter { animation: none !important; }
+  .cv-ap { opacity: 0.5; }
 }

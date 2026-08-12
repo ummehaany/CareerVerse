@@ -2,36 +2,33 @@
 
 import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/firebase/auth";
+import { enforceRateLimit } from "@/lib/firebase/firestore/rate-limit";
 import { getLatestAssessment } from "@/lib/firebase/firestore/assessments";
 import { saveRoadmap, setMilestoneStatus } from "@/lib/firebase/firestore/roadmaps";
 import { recordUsage } from "@/lib/firebase/firestore/usage";
 import { generateRoadmap as generateRoadmapAI } from "@/lib/ai/services/roadmap-generator";
-import { AIError } from "@/lib/ai/types";
+import { buildFallbackRoadmap } from "@/lib/ai/services/roadmap-fallback";
+import type { RoadmapStage } from "@/types/roadmap";
+import type { TokenUsage } from "@/lib/ai/types";
 import { ROUTES } from "@/config/routes";
+import { notifyRoadmapReady, syncAchievements } from "@/lib/email/triggers";
+import { buildMemoryContext } from "@/lib/memory/context";
+import { recordMemoryEvent } from "@/lib/firebase/firestore/memory";
 import { generateRoadmapSchema, updateMilestoneSchema } from "./schema";
 
 export type GenerateRoadmapResult = { ok: true; id: string } | { ok: false; error: string };
 
-function messageForAIError(error: AIError): string {
-  switch (error.code) {
-    case "not_configured":
-      return "AI roadmaps aren't configured yet. Add a Gemini API key to enable them.";
-    case "insufficient_input":
-      return "There isn't enough assessment data yet — retake the assessment with more detail.";
-    case "schema_mismatch":
-    case "invalid_json":
-    case "empty_response":
-      return "The AI returned an unexpected response. Please try generating again.";
-    default:
-      return "The AI couldn't build your roadmap just now. Please try again.";
-  }
-}
-
-/** Generate and persist a roadmap for the selected career. */
+/**
+ * Generate and persist a roadmap for the selected career. Always succeeds when
+ * the user has a completed assessment: if the AI provider is unavailable, a
+ * local rule-based builder produces a complete roadmap from the career catalog.
+ */
 export async function generateRoadmap(input: unknown): Promise<GenerateRoadmapResult> {
   try {
     const decoded = await verifySession();
     if (!decoded) return { ok: false, error: "Your session has expired. Please sign in again." };
+    const _rl = await enforceRateLimit(decoded.uid, "roadmap", 6);
+    if (!_rl.ok) return { ok: false, error: `You're doing that a lot. Please wait ${_rl.retryAfter}s and try again.` };
     const uid = decoded.uid;
 
     const parsed = generateRoadmapSchema.parse(input);
@@ -41,33 +38,72 @@ export async function generateRoadmap(input: unknown): Promise<GenerateRoadmapRe
       return { ok: false, error: "Complete your career assessment first to build a roadmap." };
     }
 
-    const result = await generateRoadmapAI(parsed.careerTitle, assessment.structured);
+    const memory = await buildMemoryContext(uid).catch(() => "");
+
+    let overview: string;
+    let totalEstimatedTime: string;
+    let stages: RoadmapStage[];
+    let provider: string;
+    let model: string;
+    let usage: TokenUsage | null = null;
+
+    try {
+      const result = await generateRoadmapAI(parsed.careerTitle, assessment.structured, memory);
+      overview = result.overview;
+      totalEstimatedTime = result.totalEstimatedTime;
+      stages = result.stages;
+      provider = result.provider;
+      model = result.model;
+      usage = result.usage;
+    } catch (aiError) {
+      console.error(
+        "[roadmap] AI unavailable; using offline builder:",
+        aiError instanceof Error ? aiError.message : aiError,
+      );
+      const fallback = buildFallbackRoadmap(parsed.careerTitle, assessment.structured);
+      overview = fallback.overview;
+      totalEstimatedTime = fallback.totalEstimatedTime;
+      stages = fallback.stages;
+      provider = "offline";
+      model = "rule-based";
+    }
 
     const { id } = await saveRoadmap(uid, {
       careerTitle: parsed.careerTitle,
       assessmentId: assessment.id,
-      provider: result.provider,
-      model: result.model,
-      overview: result.overview,
-      totalEstimatedTime: result.totalEstimatedTime,
-      stages: result.stages,
+      provider,
+      model,
+      overview,
+      totalEstimatedTime,
+      stages,
     });
 
-    try {
-      await recordUsage(uid, {
-        requests: 1,
-        inputTokens: result.usage.inputTokens,
-        outputTokens: result.usage.outputTokens,
-      });
-    } catch {
-      // metering is best-effort
+    if (usage) {
+      try {
+        await recordUsage(uid, {
+          requests: 1,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+        });
+      } catch {
+        // metering is best-effort
+      }
     }
+
+    // Celebratory emails (fire-and-forget; gated by prefs + anti-spam).
+    void notifyRoadmapReady(uid, {
+      careerTitle: parsed.careerTitle,
+      stageCount: stages.length,
+      totalEstimatedTime,
+    });
+    void syncAchievements(uid);
+    void recordMemoryEvent(uid, { type: "roadmap", title: `Roadmap generated: ${parsed.careerTitle}`, detail: `${stages.length} stages` });
 
     revalidatePath(ROUTES.roadmap);
     revalidatePath(ROUTES.dashboard);
     return { ok: true, id };
   } catch (error) {
-    if (error instanceof AIError) return { ok: false, error: messageForAIError(error) };
+    console.error("[roadmap] Unexpected failure:", error instanceof Error ? error.message : error);
     return { ok: false, error: "Something went wrong building your roadmap. Please try again." };
   }
 }

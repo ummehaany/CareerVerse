@@ -2,16 +2,21 @@ import type { FirestoreTimestamp } from "./user";
 
 export const RESUME_VERSION = 1;
 
-export type ResumeTemplate = "classic" | "modern";
+export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
 
 export interface ResumeContact {
   fullName: string;
+  /** Professional title, e.g. "Senior Frontend Engineer". */
   headline: string;
   email: string;
   phone: string;
   location: string;
+  /** Portfolio website. */
   website: string;
   linkedin: string;
+  github: string;
+  /** Profile photo as a small data URL (resized client-side), or "". */
+  photo: string;
 }
 
 export interface ResumeExperience {
@@ -49,6 +54,19 @@ export interface ResumeCertification {
   year: string;
 }
 
+export interface ResumeLanguage {
+  id: string;
+  name: string;
+  level: string;
+}
+
+export interface ResumeReference {
+  id: string;
+  name: string;
+  title: string;
+  contact: string;
+}
+
 /** `users/{uid}/resumes/{id}` — a single resume document (id "primary"). */
 export interface ResumeDoc {
   id: string;
@@ -60,6 +78,12 @@ export interface ResumeDoc {
   skills: string[];
   projects: ResumeProject[];
   certifications: ResumeCertification[];
+  achievements: string[];
+  languages: ResumeLanguage[];
+  interests: string[];
+  references: ResumeReference[];
+  /** Ordered section keys controlling preview layout. */
+  sectionOrder: string[];
   schemaVersion: number;
   createdAt: FirestoreTimestamp | null;
   updatedAt: FirestoreTimestamp | null;
@@ -75,4 +99,9 @@ export interface ResumeData {
   skills: string[];
   projects: ResumeProject[];
   certifications: ResumeCertification[];
+  achievements: string[];
+  languages: ResumeLanguage[];
+  interests: string[];
+  references: ResumeReference[];
+  sectionOrder: string[];
 }

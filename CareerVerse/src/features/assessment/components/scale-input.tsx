@@ -42,7 +42,7 @@ export function ScaleInput({
                 "flex h-12 flex-1 items-center justify-center rounded-xl border text-sm font-semibold tabular-nums transition-all",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                 isSelected
-                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  ? "border-primary bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_color-mix(in_srgb,var(--primary)_75%,transparent)]"
                   : "border-border bg-background text-foreground/70 hover:border-primary/40 hover:text-foreground",
               )}
             >

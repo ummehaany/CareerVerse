@@ -21,6 +21,7 @@ export function NavItem({
   return (
     <Link
       href={item.href}
+      data-tour={item.key}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}

@@ -14,6 +14,12 @@ const MESSAGES: Record<string, string> = {
   "auth/cancelled-popup-request": "Sign-in was cancelled.",
   "auth/popup-blocked": "Your browser blocked the sign-in popup. Please allow popups and try again.",
   "auth/network-request-failed": "Network error. Check your connection and try again.",
+  "auth/account-exists-with-different-credential":
+    "An account already exists with this email using a different sign-in method. Try that method.",
+  "auth/operation-not-allowed": "This sign-in method isn't enabled yet. Please try another.",
+  "auth/credential-already-in-use": "That account is already connected to a different CareerVerse account.",
+  "auth/provider-already-linked": "This provider is already connected to your account.",
+  "auth/requires-recent-login": "For security, please sign out and sign in again before doing this.",
 };
 
 export function getAuthErrorMessage(error: unknown): string {

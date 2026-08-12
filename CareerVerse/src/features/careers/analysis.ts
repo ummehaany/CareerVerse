@@ -36,14 +36,14 @@ function findResource(skill: string): { title: string; url: string } | null {
   const s = norm(skill);
   const match = LEARNING_CATALOG.find(
     (r) =>
-      r.skills.some((k) => {
+      r.skillsCovered.some((k) => {
         const n = norm(k);
         return n === s || n.includes(s) || s.includes(n);
       }) ||
       norm(r.category).includes(s) ||
       s.includes(norm(r.category)),
   );
-  return match ? { title: match.title, url: match.url } : null;
+  return match ? { title: match.title, url: match.resourceUrl } : null;
 }
 
 export function computeSkillGap(userSkills: string[], career: Career): SkillGapResult {

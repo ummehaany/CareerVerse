@@ -1,13 +1,31 @@
 import type { Metadata } from "next";
-import { getAssessmentEntry } from "@/features/assessment/queries";
-import { AssessmentFlow } from "@/features/assessment/components/assessment-flow";
+import { getDiscoveryEntry } from "@/features/assessment/discovery/queries";
+import { DiscoveryFlow } from "@/features/assessment/discovery/components/discovery-flow";
 
-export const metadata: Metadata = { title: "Career Assessment" };
+export const metadata: Metadata = { title: "Career Discovery" };
 
-// Server-rendered per user: reads any resumable draft, then hands a serializable
-// snapshot to the client flow. No feature logic runs here.
-export default async function AssessmentPage() {
-  const { draft, latestStatus } = await getAssessmentEntry();
+// Career Discovery — a short, deterministic, weighted-scoring redesign of the
+// old Career Assessment. 10 quick questions (~60–90s) produce a Top 3 career
+// match with plain-language "why", plus an optional deeper advanced
+// assessment. `?retake=1` restarts from the intro even for completed users.
+export default async function CareerDiscoveryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ retake?: string }>;
+}) {
+  const { retake } = await searchParams;
+  const entry = await getDiscoveryEntry();
 
-  return <AssessmentFlow initialDraft={draft} hasCompleted={latestStatus === "completed"} />;
+  return (
+    <DiscoveryFlow
+      initialCompleted={entry.completed}
+      initialAdvancedCompleted={entry.advancedCompleted}
+      initialRecommendations={entry.recommendations}
+      initialBasicAnswers={entry.basicAnswers}
+      initialAdvancedAnswers={entry.advancedAnswers}
+      initialAssessmentId={entry.assessmentId}
+      initialCuriosityNote={entry.curiosityNote}
+      forceRetake={retake === "1"}
+    />
+  );
 }

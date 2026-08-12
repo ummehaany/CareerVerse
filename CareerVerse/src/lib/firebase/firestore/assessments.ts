@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { adminDb, FieldValue } from "@/lib/firebase/admin";
 import {
   ASSESSMENT_VERSION,
@@ -14,7 +15,7 @@ function assessmentsRef(uid: string) {
 }
 
 /** The most recently updated assessment for a user, or null. */
-export async function getLatestAssessment(uid: string): Promise<AssessmentDoc | null> {
+async function getLatestAssessment__impl(uid: string): Promise<AssessmentDoc | null> {
   const snap = await assessmentsRef(uid).orderBy("updatedAt", "desc").limit(1).get();
   if (snap.empty) return null;
   const doc = snap.docs[0]!;
@@ -96,3 +97,6 @@ export async function finalizeAssessment(
       { merge: true },
     );
 }
+
+/** Request-memoized: dedupes identical per-user reads within a single render (I3). */
+export const getLatestAssessment = cache(getLatestAssessment__impl);

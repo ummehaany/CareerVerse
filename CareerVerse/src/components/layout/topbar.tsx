@@ -1,8 +1,12 @@
 "use client";
 
 import type { SessionUser } from "@/types/session";
-import { MenuIcon, SearchIcon, BellIcon } from "@/components/ui/icon";
+import Link from "next/link";
+import { MenuIcon, SparklesIcon } from "@/components/ui/icon";
+import { ROUTES } from "@/config/routes";
 import { UserMenu } from "./user-menu";
+import { GlobalSearch } from "@/features/search/components/global-search";
+import { Notifications } from "@/features/notifications/components/notifications";
 
 export function Topbar({ user, onMenuClick }: { user: SessionUser; onMenuClick: () => void }) {
   return (
@@ -16,22 +20,22 @@ export function Topbar({ user, onMenuClick }: { user: SessionUser; onMenuClick: 
         <MenuIcon />
       </button>
 
-      {/* Search / command-palette placeholder — wired up in a later phase. */}
-      <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-subtle sm:flex">
-        <SearchIcon size={18} />
-        <span>Search CareerVerse…</span>
-        <kbd className="ml-auto rounded border border-border px-1.5 font-sans text-xs">⌘K</kbd>
-      </div>
+      <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <button
-          type="button"
-          className="relative rounded-lg p-2 text-muted transition-colors hover:bg-foreground/5"
-          aria-label="Notifications"
-        >
-          <BellIcon />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
-        </button>
+        {user.plan === "pro" ? (
+          <span className="hidden items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary ring-1 ring-inset ring-primary/25 sm:inline-flex">
+            <SparklesIcon size={12} /> PRO
+          </span>
+        ) : (
+          <Link
+            href={ROUTES.pricing}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+          >
+            <SparklesIcon size={13} /> <span className="hidden sm:inline">Upgrade</span>
+          </Link>
+        )}
+        <Notifications />
         <UserMenu user={user} />
       </div>
     </header>

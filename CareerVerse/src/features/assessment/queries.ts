@@ -2,6 +2,8 @@ import { verifySession } from "@/lib/firebase/auth";
 import { getLatestAssessment } from "@/lib/firebase/firestore/assessments";
 import type { AssessmentStatus } from "@/types/assessment";
 import type { AssessmentDraftView } from "./types";
+import { buildAssessmentResults } from "./engine/results";
+import type { AssessmentResults } from "./engine/types";
 
 export interface AssessmentEntry {
   /** A resumable in-progress draft, if one exists. */
@@ -32,4 +34,13 @@ export async function getAssessmentEntry(): Promise<AssessmentEntry> {
       : null;
 
   return { draft, latestStatus: latest.status };
+}
+
+/** Compute the premium results for the latest completed assessment, or null. */
+export async function getAssessmentResults(): Promise<AssessmentResults | null> {
+  const decoded = await verifySession();
+  if (!decoded) return null;
+  const latest = await getLatestAssessment(decoded.uid);
+  if (!latest || latest.status !== "completed" || !latest.structured) return null;
+  return buildAssessmentResults(latest.structured, latest.answers);
 }

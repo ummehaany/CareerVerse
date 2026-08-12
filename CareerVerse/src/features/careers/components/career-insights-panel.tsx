@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { SparklesIcon, RocketIcon, ChevronRightIcon } from "@/components/ui/icon";
+import { openUpgradeDialog } from "@/features/subscription/events";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -36,6 +37,7 @@ export function CareerInsightsPanel({
     const result = await generateCareerInsightsAction(slug);
     setLoading(false);
     if (result.ok) setInsights(result.insights);
+    else if (result.limitReached) openUpgradeDialog(result.feature);
     else setError(result.error);
   }
 
@@ -54,7 +56,8 @@ export function CareerInsightsPanel({
             </p>
             {!aiConfigured && (
               <p className="mt-2 text-xs text-subtle">
-                AI isn&apos;t configured yet — add a GEMINI_API_KEY to enable insights.
+                AI insights are being prepared. Meanwhile, explore this career&apos;s skills, salary,
+                growth path, and roadmap below.
               </p>
             )}
             {error && (

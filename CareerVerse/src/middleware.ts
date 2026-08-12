@@ -8,6 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const SESSION_COOKIE = "__session";
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 const PROTECTED_PREFIXES = [
+  "/onboarding",
   "/dashboard",
   "/assessment",
   "/recommendations",
@@ -20,9 +21,13 @@ const PROTECTED_PREFIXES = [
   "/interviews",
   "/achievements",
   "/coach",
-  "/mentor",
   "/profile",
   "/settings",
+  "/companies",
+  "/analytics",
+  "/skill-gap",
+  "/portfolio",
+  "/pricing",
 ];
 
 export function middleware(request: NextRequest) {
@@ -53,6 +58,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/onboarding/:path*",
     "/dashboard/:path*",
     "/assessment/:path*",
     "/recommendations/:path*",
@@ -65,9 +71,13 @@ export const config = {
     "/interviews/:path*",
     "/achievements/:path*",
     "/coach/:path*",
-    "/mentor/:path*",
     "/profile/:path*",
     "/settings/:path*",
+    "/companies/:path*",
+    "/analytics/:path*",
+    "/skill-gap/:path*",
+    "/portfolio/:path*",
+    "/pricing/:path*",
     "/login",
     "/signup",
     "/forgot-password",

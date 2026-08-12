@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { CareerDetailData } from "../queries";
-import { formatSalaryRange, demandVariant } from "../format";
+import { formatSalaryLpa, formatSalaryRange, demandVariant } from "../format";
 import { CareerInsightsPanel } from "./career-insights-panel";
 import { CareerFavoriteToggle } from "./career-favorite-toggle";
+import { ShareButton } from "./share-button";
+import { RecordRecentlyViewed } from "./record-recently-viewed";
 import { SkillGap } from "./skill-gap";
 import { CareerSimulator } from "./career-simulator";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +15,16 @@ import {
   TrendingUpIcon,
   RouteIcon,
   ArrowRightIcon,
+  CheckIcon,
+  WrenchIcon,
+  BriefcaseIcon,
+  UsersIcon,
 } from "@/components/ui/icon";
 import { GraduationCapIcon, AwardIcon } from "@/components/ui/icons-extended";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 import type { Career } from "@/lib/careers/types";
+import { getCareerEnrichment } from "@/lib/careers/enrich";
 
 function Rating({ value, label }: { value: number; label: string }) {
   return (
@@ -62,11 +69,26 @@ function TagList({ items }: { items: string[] }) {
   );
 }
 
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2 text-sm text-muted">
+          <CheckIcon size={15} className="mt-0.5 shrink-0 text-primary" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function CareerDetail({ data }: { data: CareerDetailData }) {
   const career = data.career as Career;
+  const enrich = getCareerEnrichment(career);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-fade-up">
+      <RecordRecentlyViewed slug={career.slug} />
       <Link
         href={ROUTES.careers}
         className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground"
@@ -87,11 +109,12 @@ export function CareerDetail({ data }: { data: CareerDetailData }) {
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p className="text-xs text-subtle">Salary (illustrative)</p>
+            <p className="text-xs text-subtle">Salary in India (illustrative)</p>
             <p className="mt-1 inline-flex items-center gap-1 text-sm font-semibold">
               <DollarIcon size={14} className="text-subtle" />
-              {formatSalaryRange(career.salary)}
+              {formatSalaryLpa(career.slug, career.salary)}
             </p>
+            <p className="mt-0.5 text-[11px] text-subtle">≈ {formatSalaryRange(career.salary)} (US)</p>
           </div>
           <div>
             <p className="text-xs text-subtle">Future demand</p>
@@ -113,6 +136,7 @@ export function CareerDetail({ data }: { data: CareerDetailData }) {
             Build a roadmap
           </Link>
           <CareerFavoriteToggle slug={career.slug} initialFavorited={data.favorited} />
+          <ShareButton slug={career.slug} title={career.title} withLabel />
         </div>
       </section>
 
@@ -120,8 +144,19 @@ export function CareerDetail({ data }: { data: CareerDetailData }) {
         <p className="text-sm text-muted">{career.whatDoes}</p>
       </SectionCard>
 
+      <SectionCard title="Key responsibilities">
+        <BulletList items={enrich.responsibilities} />
+      </SectionCard>
+
       <SectionCard title="Required skills">
         <TagList items={career.skills} />
+      </SectionCard>
+
+      <SectionCard title="Tools & technologies">
+        <div className="flex items-start gap-2">
+          <WrenchIcon size={16} className="mt-0.5 shrink-0 text-primary" />
+          <TagList items={enrich.tools} />
+        </div>
       </SectionCard>
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -147,7 +182,45 @@ export function CareerDetail({ data }: { data: CareerDetailData }) {
         </SectionCard>
       </div>
 
-      <SectionCard title="Companies commonly hiring">
+      <SectionCard title="Career growth path">
+        <ol className="space-y-2">
+          {enrich.growthPath.map((step, index) => (
+            <li key={step} className="flex items-center gap-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary tabular-nums">
+                {index + 1}
+              </span>
+              <span className="text-sm text-foreground/80">{step}</span>
+              {index < enrich.growthPath.length - 1 && (
+                <ArrowRightIcon size={13} className="text-subtle" />
+              )}
+            </li>
+          ))}
+        </ol>
+      </SectionCard>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <SectionCard title="Work environment">
+          <p className="inline-flex items-start gap-2 text-sm text-muted">
+            <BriefcaseIcon size={16} className="mt-0.5 shrink-0 text-primary" />
+            {enrich.workEnvironment}
+          </p>
+        </SectionCard>
+        <SectionCard title="Future demand in India">
+          <p className="inline-flex items-start gap-2 text-sm text-muted">
+            <TrendingUpIcon size={16} className="mt-0.5 shrink-0 text-primary" />
+            {enrich.futureDemandIndia}
+          </p>
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Top recruiters in India">
+        <div className="flex items-start gap-2">
+          <UsersIcon size={16} className="mt-0.5 shrink-0 text-primary" />
+          <TagList items={enrich.topRecruitersIndia} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Companies hiring globally">
         <TagList items={career.companies} />
       </SectionCard>
 

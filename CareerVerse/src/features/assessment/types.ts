@@ -1,18 +1,20 @@
 import type { Answers, AnswerValue, AssessmentStatus } from "@/types/assessment";
+import type { DimensionId } from "./engine/types";
 
 export type QuestionType = "single" | "multi" | "scale" | "text" | "longtext";
 
 export type SectionId =
-  | "interests"
-  | "education"
-  | "technical"
-  | "soft"
-  | "strengths"
   | "personality"
-  | "workstyle"
-  | "values"
-  | "leadership"
+  | "interests"
+  | "problemsolving"
+  | "learning"
+  | "communication"
+  | "motivation"
+  | "strengths"
   | "goals";
+
+/** Weighted contribution an answer makes toward the 15 scoring dimensions. */
+export type DimensionWeights = Partial<Record<DimensionId, number>>;
 
 export interface Option {
   value: string;
@@ -20,6 +22,12 @@ export interface Option {
   description?: string;
   /** Key into the assessment icon registry (see components/option-icon). */
   icon?: string;
+  /**
+   * How much selecting this option contributes to each scoring dimension.
+   * Consumed by the scoring engine; ignored by normalization (which only reads
+   * the direct-capture questions). Optional so plain questions stay simple.
+   */
+  weights?: DimensionWeights;
 }
 
 export interface ScaleConfig {
@@ -46,6 +54,12 @@ export interface Question {
   placeholder?: string;
   minLength?: number;
   maxLength?: number;
+  /**
+   * Marks questions that exist purely to enrich dimension scoring (new in the
+   * weighted redesign). They are never read by buildStructuredProfile, so the
+   * downstream StructuredProfile contract is unaffected.
+   */
+  scoringOnly?: boolean;
 }
 
 export interface Section {

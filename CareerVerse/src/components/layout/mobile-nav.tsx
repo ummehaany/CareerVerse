@@ -7,6 +7,7 @@ import { navForRole } from "@/config/nav";
 import { NavItem } from "./nav-item";
 import { Avatar } from "@/components/ui/avatar";
 import { XIcon } from "@/components/ui/icon";
+import { Logo } from "@/components/ui/logo";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -51,12 +52,10 @@ export function MobileNav({
           <Link
             href={ROUTES.dashboard}
             onClick={onClose}
-            className="flex items-center gap-2 font-bold tracking-tight"
+            aria-label="CareerVerse AI — go to dashboard"
+            className="flex items-center rounded-lg"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              C
-            </span>
-            CareerVerse
+            <Logo size={32} textClassName="text-[15px]" />
           </Link>
           <button
             type="button"

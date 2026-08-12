@@ -9,6 +9,7 @@ import { signupSchema, type SignupInput } from "../schema";
 import { signUpWithEmail } from "../api";
 import { getAuthErrorMessage } from "../errors";
 import { GoogleButton } from "./google-button";
+import { GithubButton } from "./github-button";
 import { FieldError } from "./field-error";
 import { OrDivider } from "./or-divider";
 import { ROUTES } from "@/config/routes";
@@ -97,6 +98,7 @@ export function SignupForm() {
 
       <OrDivider />
       <GoogleButton redirectTo={ROUTES.dashboard} onError={(m) => setFormError(m || null)} label="Sign up with Google" />
+      <GithubButton redirectTo={ROUTES.dashboard} onError={(m) => setFormError(m || null)} label="Sign up with GitHub" />
 
       <p className="text-center text-sm text-foreground/60">
         Already have an account?{" "}

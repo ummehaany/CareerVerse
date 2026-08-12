@@ -9,7 +9,7 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase/client";
+import { auth, googleProvider, githubProvider } from "@/lib/firebase/client";
 import type { LoginInput, SignupInput } from "./schema";
 
 /**
@@ -44,6 +44,11 @@ export async function signUpWithEmail({ displayName, email, password }: SignupIn
 
 export async function signInWithGoogle(): Promise<void> {
   await signInWithPopup(auth, googleProvider);
+  await establishSession();
+}
+
+export async function signInWithGithub(): Promise<void> {
+  await signInWithPopup(auth, githubProvider);
   await establishSession();
 }
 

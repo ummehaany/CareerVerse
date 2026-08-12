@@ -108,13 +108,14 @@ export interface RecommenderResult {
 export async function recommendCareers(
   profile: StructuredProfile,
   displayName?: string | null,
+  memoryContext?: string,
 ): Promise<RecommenderResult> {
   guardProfile(profile);
 
   const provider = getAIProvider();
   const { data, usage } = await provider.generateObject(recommendationSetSchema, {
     system: buildRecommendationSystemPrompt(),
-    prompt: buildRecommendationUserPrompt(profile, displayName),
+    prompt: buildRecommendationUserPrompt(profile, displayName) + (memoryContext ? `\n\n${memoryContext}` : ""),
     temperature: 0.65,
     maxOutputTokens: 6000,
     responseSchema: RESPONSE_SCHEMA,

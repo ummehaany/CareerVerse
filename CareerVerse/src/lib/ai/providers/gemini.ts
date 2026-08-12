@@ -12,6 +12,9 @@ import {
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 
+/** Hard ceiling for any single AI request so a slow provider can never hang a call. */
+const AI_TIMEOUT_MS = 30_000;
+
 /**
  * Current, broadly-available Gemini Developer API models tried in order when the
  * configured model is unavailable (e.g. an older model has been retired). The
@@ -124,18 +127,30 @@ export function createGeminiProvider(): AIProvider {
 
     for (const model of candidateModels) {
       let response: Response;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
       try {
         response = await fetch(`${ENDPOINT}/${model}:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
+          signal: controller.signal,
         });
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          throw new AIError(
+            `The AI request timed out after ${AI_TIMEOUT_MS / 1000}s.`,
+            "provider_error",
+            "timeout",
+          );
+        }
         throw new AIError(
           "Could not reach the AI provider.",
           "provider_error",
           error instanceof Error ? error.message : undefined,
         );
+      } finally {
+        clearTimeout(timeout);
       }
 
       if (response.ok) {

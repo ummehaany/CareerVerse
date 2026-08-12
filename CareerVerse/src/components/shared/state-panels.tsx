@@ -11,7 +11,7 @@ export function LoadingPanel({
   message?: string;
 }) {
   return (
-    <Card className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+    <Card className="flex flex-col items-center justify-center gap-4 py-16 text-center animate-fade-up">
       <Spinner className="h-8 w-8 text-primary" />
       <div className="space-y-1">
         <p className="font-medium">{title}</p>
@@ -34,12 +34,12 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col items-center gap-4 py-14 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+    <Card className="flex flex-col items-center gap-4 py-14 text-center animate-fade-up">
+      <span className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary ring-1 ring-inset ring-primary/10">
         {icon}
       </span>
-      <div className="space-y-1">
-        <p className="font-medium">{title}</p>
+      <div className="space-y-1.5">
+        <p className="text-base font-semibold tracking-tight">{title}</p>
         <p className="mx-auto max-w-md text-sm text-muted">{body}</p>
       </div>
       {action}

@@ -42,21 +42,21 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
 }
 
 export function ProgressHeader({
-  stepIndex,
-  stepCount,
+  index,
+  total,
   section,
   progressPercent,
   answeredTotal,
   saveStatus,
 }: {
-  stepIndex: number;
-  stepCount: number;
+  index: number;
+  total: number;
   section: Section;
   progressPercent: number;
   answeredTotal: number;
   saveStatus: SaveStatus;
 }) {
-  const minutesLeft = Math.max(1, Math.ceil(((TOTAL_QUESTIONS - answeredTotal) * 18) / 60));
+  const minutesLeft = Math.max(1, Math.ceil(((TOTAL_QUESTIONS - answeredTotal) * 16) / 60));
 
   return (
     <div className="sticky top-16 z-10 -mx-4 border-b border-border bg-surface/85 px-4 py-4 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:bg-background sm:px-6">
@@ -67,9 +67,11 @@ export function ProgressHeader({
           </span>
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-subtle">
-              Step {stepIndex + 1} of {stepCount}
+              {section.title}
             </p>
-            <p className="truncate text-sm font-semibold">{section.title}</p>
+            <p className="truncate text-sm font-semibold">
+              Question {index + 1} of {total}
+            </p>
           </div>
         </div>
         <SaveIndicator status={saveStatus} />
