@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// Firestore Security Rules — defense-in-depth for the client SDK (realtime)
+// path. All writes in the app go through the Admin SDK on the server, which
+// bypasses these rules; clients are read-only and scoped to their own data.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    // Account core. Server-written; owner may read their own document.
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+
+      // User-owned subcollections (assessments, roadmaps, resumes, …).
+      // Readable by the owner for realtime UI; writes are server-only.
+      match /{subcollection}/{docId=**} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // Rich career profile. Owner-readable; populated server-side.
+    match /careerProfiles/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Shared catalogs (seeded in a later phase): world-readable, admin-written.
+    match /careers/{careerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /skills/{skillId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
