@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { ArrowRightIcon, SparklesIcon } from "@/components/ui/icon";
 
 /**
- * One lightweight, fully optional free-text moment after the 10 scored
- * questions. Never fed into scoring (per product brief — keep it a safe,
- * explainable personalization signal, not scoring complexity); shown back to
- * the student on the results page and saved as their profile "aspiration."
+ * One lightweight, fully optional free-text moment after the 20 mandatory
+ * Core questions. Never fed into scoring (per product brief — keep it a
+ * safe, explainable personalization signal, not scoring complexity); shown
+ * back to the student on the results page and saved as their profile
+ * "aspiration."
  */
 export function CuriosityStep({
   initialValue,

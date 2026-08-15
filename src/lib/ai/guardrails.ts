@@ -18,7 +18,7 @@ export function guardProfile(profile: StructuredProfile): void {
   }
 }
 
-function dedupeTrim(values: string[]): string[] {
+export function dedupeTrim(values: string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   for (const value of values) {

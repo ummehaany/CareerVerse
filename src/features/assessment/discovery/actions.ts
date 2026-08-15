@@ -10,6 +10,7 @@ import { saveCareerDiscovery } from "@/lib/firebase/firestore/careerDiscovery";
 import { ROUTES } from "@/config/routes";
 import { scoreCareerDiscovery } from "./scoring";
 import { buildDiscoveryProfilePatch, buildDiscoveryStructuredProfile } from "./normalize";
+import { TOTAL_BASIC_QUESTIONS } from "./questions";
 import type { CareerMatch, DiscoveryAnswers } from "./types";
 
 /*
@@ -50,7 +51,7 @@ export type CompleteBasicResult =
   | { ok: true; assessmentId: string; recommendations: CareerMatch[] }
   | { ok: false; error: string };
 
-/** Finalize the 10-question basic Career Discovery flow. */
+/** Finalize the mandatory 20-question Core Career Discovery flow. */
 export async function completeBasicDiscovery(input: unknown): Promise<CompleteBasicResult> {
   try {
     const uid = await requireUid();
@@ -63,13 +64,13 @@ export async function completeBasicDiscovery(input: unknown): Promise<CompleteBa
 
     const { id } = await upsertAssessmentDraft(uid, {
       id: null,
-      currentStep: 10,
+      currentStep: TOTAL_BASIC_QUESTIONS,
       answers: basicAnswers,
     });
 
     await finalizeAssessment(uid, id, {
       answers: basicAnswers,
-      currentStep: 10,
+      currentStep: TOTAL_BASIC_QUESTIONS,
       structured,
       completionPercent: 100,
     });
@@ -106,7 +107,7 @@ export type CompleteAdvancedResult =
   | { ok: true; recommendations: CareerMatch[] }
   | { ok: false; error: string };
 
-/** Refine the profile with the optional 25–30 question advanced assessment. */
+/** Refine the profile with the optional 30-question Deep assessment. */
 export async function completeAdvancedDiscovery(input: unknown): Promise<CompleteAdvancedResult> {
   try {
     const uid = await requireUid();
@@ -120,7 +121,7 @@ export async function completeAdvancedDiscovery(input: unknown): Promise<Complet
 
     await finalizeAssessment(uid, parsed.assessmentId, {
       answers: basicAnswers,
-      currentStep: 10,
+      currentStep: TOTAL_BASIC_QUESTIONS,
       structured,
       completionPercent: 100,
     });

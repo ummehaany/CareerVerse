@@ -5,9 +5,11 @@ import { DiscoveryFlow } from "@/features/assessment/discovery/components/discov
 export const metadata: Metadata = { title: "Career Discovery" };
 
 // Career Discovery — a short, deterministic, weighted-scoring redesign of the
-// old Career Assessment. 10 quick questions (~60–90s) produce a Top 3 career
-// match with plain-language "why", plus an optional deeper advanced
-// assessment. `?retake=1` restarts from the intro even for completed users.
+// old Career Assessment. 20 mandatory Core questions (a few minutes) produce
+// a standalone Top 3 career match with plain-language "why", plus an
+// optional 30-question Deep tier that refines that same result using the
+// same scoring engine (`scoring.ts`) — never a different one.
+// `?retake=1` restarts from the intro even for completed users.
 export default async function CareerDiscoveryPage({
   searchParams,
 }: {

@@ -209,14 +209,31 @@ export function scoreCareerDiscovery(
     contributionsByTrait.set(c.trait, list);
   });
 
-  const all: CareerMatch[] = getCareers().map((career) => {
+  const scored: Array<{ match: CareerMatch; rawMatch: number }> = getCareers().map((career) => {
     const fieldId = fieldForCategory(career.category);
     const categoryFit = fieldId ? fieldFit[fieldId] : 0;
 
     const vector = careerTraitVector(career);
+    // traitCompatibility (Formula C, approved 2026-08-15): averaged over only
+    // this career's own top-4 highest-demand traits, instead of all 11.
+    // Every career's vector carries a non-zero "floor" (~25-45) on traits
+    // that aren't actually central to it (see traits.ts) — averaging across
+    // all 11 diluted every career's score against those floor traits the
+    // student was never even measured as strong or weak on, which is what
+    // compressed the Top 15 into a 1-2 percentage-point band regardless of
+    // which career actually fit best (see the 2026-08-15 clustering
+    // investigation). Restricting the average to each career's own top-4
+    // discriminative traits keeps the score driven by what actually defines
+    // that career, not by traits it barely needs. `weightTotal`'s formula is
+    // otherwise unchanged (still demand-weighted, still 0-1 normalized), and
+    // the 0.6/0.4 field/trait split and 1-97 clamp below are untouched.
+    const discriminativeTraits = ([...TRAITS] as TraitId[])
+      .slice()
+      .sort((a, b) => vector[b] - vector[a])
+      .slice(0, 4);
     let weightedSum = 0;
     let weightTotal = 0;
-    TRAITS.forEach((t) => {
+    discriminativeTraits.forEach((t) => {
       const demand = vector[t] / 100;
       weightedSum += demand * traitFit[t];
       weightTotal += demand;
@@ -243,7 +260,7 @@ export function scoreCareerDiscovery(
 
     const fieldLabel = fieldId ? FIELDS_BY_ID[fieldId].label : career.category;
 
-    return {
+    const match: CareerMatch = {
       id: career.slug,
       title: career.title,
       category: career.category,
@@ -254,9 +271,20 @@ export function scoreCareerDiscovery(
       explanation: explanationFor(career, fieldLabel, traitDriverLabels, matchPercent),
       drivers: traitDriverLabels.map(toPhrase),
     };
+    return { match, rawMatch };
   });
 
-  all.sort((a, b) => b.matchPercent - a.matchPercent);
+  // Sort by the full-precision raw score, not the rounded/clamped display
+  // percentage. Two careers in the same field commonly round to the exact
+  // same integer `matchPercent` (e.g. 47%) even though one is a measurably
+  // closer fit — sorting on the rounded value made that tie-break fall back
+  // to the career catalog's arbitrary array order, which could rank a
+  // strongly-signaled career (e.g. Data Scientist for an analytical/
+  // research-leaning profile) below a same-field neighbor purely because of
+  // catalog position. `matchPercent` itself is unchanged — this only fixes
+  // ordering among careers that display the same rounded percentage.
+  scored.sort((a, b) => b.rawMatch - a.rawMatch);
+  const all: CareerMatch[] = scored.map((s) => s.match);
 
   const topFieldId = ([...FIELDS] as typeof FIELDS)
     .slice()

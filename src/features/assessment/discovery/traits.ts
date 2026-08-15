@@ -94,7 +94,13 @@ export function careerTraitVector(career: Career): TraitVector {
 
   // Visual/verbal/conceptual creation. Specific, hands-on creative terms only
   // — bare "design" and "art" were matching "system design" and "chartered".
-  const creative = has(text, "creativ", "illustrat", "storytell", "brand", "aesthetic", "artistic", "graphic", "animation", "visual")
+  // Fix (2026-08-15): bare "visual" also matched "Visualization" — a data/BI
+  // skill (BI Analyst, Data Analyst both list it), not artistic/visual
+  // creativity — inflating those two Data & AI careers' creative demand to
+  // the same top tier as Graphic Designer. Replaced with the specific
+  // phrase "visual design" (still matches UI Designer's literal "Visual
+  // design" skill) so it no longer fires on "Visualization".
+  const creative = has(text, "creativ", "illustrat", "storytell", "brand", "aesthetic", "artistic", "graphic", "animation", "visual design")
     ? 85
     : cat === "Marketing & Media" || cat === "Design"
       ? 75
@@ -127,28 +133,78 @@ export function careerTraitVector(career: Career): TraitVector {
   // strength but no technical/hands-on preference: those roles' own high
   // technical demand now works against them when the student's technical fit
   // is low, the same way structure/responsibility already did.
-  const technical = has(text, "programming", "coding", "cad", "construction", "mechanical", "electrical", "infrastructure", "hardware", "dexterity", "surgical", "anatomy", "manual", "imaging", "lab", "clinical")
+  // "python", "machine learning", "sql", "algorithm" added (2026-08-15 fix):
+  // Data & AI careers' own catalog text ("Machine learning / AI", "Python",
+  // "Statistics", "Data analysis") matched none of the prior technical
+  // keywords, so every Data & AI career fell back to the generic
+  // cat === "Data & AI" baseline of 75 — identical to, and sometimes lower
+  // than, general Technology roles whose skills literally say "Programming"
+  // (85). That let hands-on-but-generic roles like Backend Developer or
+  // Cybersecurity Analyst systematically outrank Data Scientist/ML Engineer/
+  // Data Engineer for a student whose answers clearly signal data-science
+  // work, purely from an under-inclusive keyword list, not from the
+  // student's actual answers. These four terms are specific, unambiguous
+  // proper nouns/technical terms with no false-positive collision risk.
+  const technical = has(text, "programming", "coding", "cad", "construction", "mechanical", "electrical", "infrastructure", "hardware", "dexterity", "surgical", "anatomy", "manual", "imaging", "lab", "clinical", "python", "machine learning", "\\bsql\\b", "algorithm")
     ? 85
     : cat === "Technology" || cat === "Data & AI" || cat === "Engineering"
       ? 75
       : 25;
 
-  // Commercial/strategic/revenue-oriented work.
-  const businessAcumen = has(text, "business", "strateg", "sales", "revenue", "market", "negotiat", "operations", "management", "finance", "client")
+  // Commercial/strategic/revenue-oriented work. Fix (2026-08-15): bare
+  // "operations" matched IT/software operations too (Site Reliability
+  // Engineer: "Blends software and operations..."), a different, non-
+  // business sense of the word. Genuine business-operations roles
+  // (Operations Manager, Healthcare Administrator, Logistics Manager,
+  // Industrial Engineer) keep matching on "operations" as before — only
+  // the specific "software [and] operations" phrasing is excluded, since
+  // that's the one evidenced false-positive source, not the word itself.
+  const isSoftwareOperations = /\bsoftware[ /]*(and )?operations\b/.test(text);
+  const businessAcumen = has(text, "business", "strateg", "sales", "revenue", "market", "negotiat", "management", "finance", "client") || (has(text, "operations") && !isSoftwareOperations)
     ? 78
     : cat === "Business" || cat === "Finance" || cat === "Product & Management"
       ? 75
       : 30;
 
-  // Writing, presenting, persuading, explaining.
-  const communication = has(text, "communicat", "writ", "present", "teach", "journal", "negotiat", "advoca", "public")
+  // Writing, presenting, persuading, explaining — core purpose, not just a
+  // listed soft skill. Fix (2026-08-15): "communicat" alone used to be
+  // checked against the *full* text, including the skills list — but
+  // "Communication" is a common generic 5th-of-five skill tag on many
+  // analytical/technical catalog entries (Data Scientist, Financial
+  // Analyst, Business Analyst...) that aren't actually communication-first
+  // roles. That inflated their communication *demand* to 85 — the same
+  // tier as Journalist or Content Strategist — which then penalized
+  // exactly the analytical-but-not-verbally-confident candidates those
+  // roles should match (their real answers show low communication fit, and
+  // averaging against an overstated 85-demand trait dragged their overall
+  // score below more generic, less-relevant Technology roles). "communicat"
+  // now only qualifies for the top tier when it's part of the role's own
+  // core description (title/tagline/whatDoes); the other keywords here are
+  // specific enough ("writ", "journal", "advoca"...) to keep checking the
+  // full text including skills.
+  const coreText = `${career.title} ${career.tagline} ${career.whatDoes}`.toLowerCase();
+  const communication = has(coreText, "communicat") || has(text, "writ", "present", "teach", "journal", "negotiat", "advoca", "public")
     ? 85
     : cat === "Marketing & Media" || cat === "Law & Public" || cat === "Education"
       ? 75
-      : 40;
+      : has(text, "communicat")
+        ? 55
+        : 40;
 
-  // Directing people, strategy, or an organization.
-  const leadership = has(text, "lead", "manage", "director", "head", "principal", "chief", "found", "strateg")
+  // Directing people or an organization. Fix (2026-08-15): "strateg" alone
+  // used to qualify for the top tier — but "strategy" describes the
+  // *subject* of many individual-contributor/advisory roles (BI Analyst:
+  // "guide business strategy"; Content Strategist, Tax Advisor, Education
+  // Consultant: "advise on ... strategy"), not whether the role directs
+  // people. That inflated their leadership demand to 80 despite none of
+  // them managing anyone. Genuine leadership roles keep matching via
+  // "manage"/"lead"/"director"/etc. regardless — every catalog role that
+  // legitimately combines strategy with leadership (Strategy Manager,
+  // Marketing Manager, Management Consultant...) already has "manage" or
+  // "lead" in its own title/description, so removing "strateg" here costs
+  // nothing for them. "strateg" still independently qualifies for
+  // businessAcumen above, which is the trait it actually signals.
+  const leadership = has(text, "lead", "manage", "director", "head", "principal", "chief", "found")
     ? 80
     : cat === "Product & Management" || cat === "Business"
       ? 65

@@ -10,9 +10,9 @@ import type { AnswerValue, DiscoveryAnswers, DiscoveryOption, DiscoveryQuestion 
 
 /**
  * Drives a one-question-at-a-time flow over any question list: progress bar,
- * Back/Continue, and auto-advance for single-choice questions so the basic
- * 10-question set moves fast without feeling like a form. Shared by the
- * basic and advanced (optional) assessments.
+ * Back/Continue, and auto-advance for single-choice questions so the
+ * mandatory 20-question Core tier moves fast without feeling like a form.
+ * Shared by the Core and Deep (optional) assessments.
  */
 export function QuestionFlow({
   questions,

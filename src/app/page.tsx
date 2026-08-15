@@ -1,36 +1,69 @@
-import Link from "next/link";
-import { ROUTES } from "@/config/routes";
-import { Button } from "@/components/ui/button";
-import { BrandLockup } from "@/components/ui/logo";
+import type { Metadata } from "next";
+import { getCurrentUser } from "@/lib/firebase/auth";
+import { siteConfig } from "@/config/site";
+import type { SessionUser } from "@/types/session";
+import { Alert } from "@/components/ui/alert";
+import { CosmicBackground } from "@/components/layout/cosmic-background";
+import { HomeHeader } from "@/features/home/components/home-header";
+import { HeroSection } from "@/features/home/components/hero-section";
+import { FeaturesSection } from "@/features/home/components/features-section";
+import { HowItWorksSection } from "@/features/home/components/how-it-works-section";
+import { DiscoveryShowcaseSection } from "@/features/home/components/discovery-showcase-section";
+import { WhySection } from "@/features/home/components/why-section";
+import { FinalCtaSection } from "@/features/home/components/final-cta-section";
+import { HomeFooter } from "@/features/home/components/home-footer";
+import { getHomeCtas } from "@/features/home/config";
+
+export const metadata: Metadata = {
+  description: siteConfig.description,
+};
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ deleted?: string }> }) {
   const { deleted } = await searchParams;
+  const user = await getCurrentUser();
+
+  const sessionUser: SessionUser | null = user
+    ? {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        role: user.role,
+        plan: user.plan,
+      }
+    : null;
+
+  const ctas = getHomeCtas(user ? { onboardingComplete: user.onboardingComplete } : null);
+  const firstName = user?.onboardingComplete
+    ? (user.displayName?.split(" ")[0] ?? user.email?.split("@")[0] ?? null)
+    : null;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 text-center">
-      {deleted === "1" && (
-        <div className="mx-auto max-w-md rounded-2xl border border-border bg-background p-4 text-sm text-foreground/80 shadow-sm">
-          Your CareerVerse account has been permanently deleted. We wish you the very best for your future. 👋
-        </div>
-      )}
-      <div className="space-y-6">
-        <BrandLockup className="mx-auto max-w-xs rounded-3xl shadow-2xl shadow-primary/10 sm:max-w-sm" />
-        <p className="mx-auto max-w-md text-foreground/60">
-          AI-powered career development. Discover your path, build the skills, and grow with a
-          personal AI mentor.
-        </p>
+    <div className="relative min-h-screen">
+      <CosmicBackground />
+      <div className="relative z-10">
+        <HomeHeader user={sessionUser} />
+
+        <main>
+          {deleted === "1" && (
+            <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6 lg:px-8">
+              <Alert variant="info">
+                Your CareerVerse account has been permanently deleted. We wish you the very best for
+                your future. 👋
+              </Alert>
+            </div>
+          )}
+
+          <HeroSection ctas={ctas} firstName={firstName} />
+          <FeaturesSection />
+          <HowItWorksSection />
+          <DiscoveryShowcaseSection cta={ctas.heroPrimary} />
+          <WhySection />
+          <FinalCtaSection cta={ctas.finalPrimary} />
+        </main>
+
+        <HomeFooter />
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Link href={ROUTES.signup}>
-          <Button size="lg" className="w-full sm:w-auto">
-            Get started
-          </Button>
-        </Link>
-        <Link href={ROUTES.login}>
-          <Button size="lg" variant="outline" className="w-full sm:w-auto">
-            Sign in
-          </Button>
-        </Link>
-      </div>
-    </main>
+    </div>
   );
 }

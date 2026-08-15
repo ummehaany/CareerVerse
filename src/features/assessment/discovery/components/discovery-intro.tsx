@@ -2,6 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, ClockIcon, CompassIcon, ShieldIcon } from "@/components/ui/icon";
+import { TOTAL_BASIC_QUESTIONS, ESTIMATED_BASIC_SECONDS } from "../questions";
+
+const ESTIMATED_BASIC_MINUTES_LOW = Math.max(1, Math.floor(ESTIMATED_BASIC_SECONDS / 60));
+const ESTIMATED_BASIC_MINUTES_HIGH = Math.max(ESTIMATED_BASIC_MINUTES_LOW + 1, Math.ceil(ESTIMATED_BASIC_SECONDS / 60) + 1);
 
 export function DiscoveryIntro({
   alreadyCompleted,
@@ -36,7 +40,7 @@ export function DiscoveryIntro({
         </div>
 
         <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-muted">
-          <ClockIcon size={16} /> 10 quick questions · About 1 minute
+          <ClockIcon size={16} /> {TOTAL_BASIC_QUESTIONS} quick questions · About {ESTIMATED_BASIC_MINUTES_LOW}–{ESTIMATED_BASIC_MINUTES_HIGH} minutes
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

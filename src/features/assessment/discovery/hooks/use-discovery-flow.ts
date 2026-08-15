@@ -12,8 +12,8 @@ function hasValue(value: AnswerValue | undefined): boolean {
 
 /**
  * One-question-per-screen flow state, generic over any question list. Used
- * for both the 10-question basic flow and the optional 25–30 question
- * advanced flow — same mechanics, different question bank.
+ * for both the 20-question mandatory Core flow and the optional 30-question
+ * Deep flow — same mechanics, different question bank.
  */
 export function useDiscoveryFlow(questions: DiscoveryQuestion[], initialAnswers: DiscoveryAnswers = {}) {
   const [answers, setAnswers] = useState<DiscoveryAnswers>(initialAnswers);

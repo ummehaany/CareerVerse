@@ -1,14 +1,17 @@
 import type { FieldWeights, DiscoveryQuestion, TraitWeights } from "./types";
 
 /*
- * Career Discovery — question bank (v2).
+ * Career Discovery — question bank (v3).
  *
- * BASIC_QUESTIONS: exactly 10 questions, ~60–90 seconds. Every option carries
- * an explicit weight toward one or more of the 9 broad fields (`fields.ts`)
- * and/or the 11 work-style traits (`traits.ts`). Fields answer "which world"
- * (medicine vs. law vs. tech); traits answer "which specific career within
- * that world." Nothing here is weighted to an individual career — that's
- * computed at scoring time against the full `lib/careers/catalog.ts`.
+ * BASIC_QUESTIONS: exactly 20 questions — the mandatory "Core" tier, a few
+ * minutes. Every option carries an explicit weight toward one or more of the
+ * 9 broad fields (`fields.ts`) and/or the 11 work-style traits (`traits.ts`).
+ * Fields answer "which world" (medicine vs. law vs. tech); traits answer
+ * "which specific career within that world." Nothing here is weighted to an
+ * individual career — that's computed at scoring time against the full
+ * `lib/careers/catalog.ts`. The Core tier must stand on its own: it is
+ * required before any result is shown, and its 20 questions alone must
+ * produce a confident, well-differentiated Top 3.
  *
  * Changes from v1, per audit:
  *  - Added `fieldInterest` (Q1) — the broad-world question that unlocks
@@ -22,10 +25,28 @@ import type { FieldWeights, DiscoveryQuestion, TraitWeights } from "./types";
  *  - `dreamCompanies` renamed `organizationInterest` and made adaptive
  *    (see `organizations.ts`) instead of always showing tech companies.
  *
- * ADVANCED_QUESTIONS: the same 28 questions as before (content preserved —
- * they were reasonably designed), retargeted from career-id weights to the
- * 11 traits so they refine standing across the *entire* catalog rather than
- * a fixed 21-career list.
+ * Changes from v2 → v3 (10 → 20 Core questions): the original v2 Core tier
+ * (10 questions) scored careers well but left most of `StructuredProfile`
+ * null (education, technicalProficiency, learningAgility,
+ * communicationConfidence, growthAreas, workStyle.environment/pace,
+ * personality.structurePreference, goals.horizon) — those fields are read by
+ * Resume, Portfolio, Roadmap, and the recommendation personalizer, so a
+ * thin profile meant weaker downstream personalization even though career
+ * *matching* itself was fine. The 10 questions added below (`educationLevel`
+ * through `goalHorizon`) each do double duty: they carry real field/trait
+ * weights (so the mandatory 20-question tier scores more confidently on its
+ * own, not just at 10 questions), AND they populate the previously-null
+ * `StructuredProfile` fields via `normalize.ts`. `fieldOfStudyOrWork`
+ * deliberately includes a "Not sure yet" option (no field weight) so an
+ * undecided student isn't forced to bias their own field score.
+ *
+ * ADVANCED_QUESTIONS: the original 28 questions (content preserved — they
+ * were reasonably designed, retargeted from career-id weights to the 11
+ * traits so they refine standing across the *entire* catalog rather than a
+ * fixed 21-career list) plus 2 new questions (`adv_adaptability_2`,
+ * `adv_teamwork_2`) bringing the optional "Deep" tier to exactly 30 — those
+ * two traits previously had only one question each, the thinnest coverage
+ * in the bank.
  */
 
 function fw(weights: FieldWeights): FieldWeights {
@@ -36,7 +57,7 @@ function tw(weights: TraitWeights): TraitWeights {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BASIC — exactly 10 questions
+// BASIC — exactly 20 questions (mandatory "Core" tier)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const BASIC_QUESTIONS: DiscoveryQuestion[] = [
@@ -165,6 +186,134 @@ export const BASIC_QUESTIONS: DiscoveryQuestion[] = [
     ],
   },
   {
+    id: "educationLevel",
+    title: "What's your current level of education?",
+    helpText: "This helps personalize your roadmap — it doesn't bias your career matches.",
+    type: "single",
+    options: [
+      { value: "high_school", label: "High school / pre-university" },
+      { value: "undergraduate", label: "Undergraduate student" },
+      { value: "graduate", label: "Graduate student (Master's / PhD)", traitWeights: tw({ analytical: 3, independence: 2 }) },
+      { value: "working_professional", label: "Working professional", traitWeights: tw({ responsibility: 3, structure: 2 }) },
+      { value: "self_taught", label: "Self-taught / exploring outside formal education", traitWeights: tw({ riskTolerance: 3, independence: 3 }) },
+    ],
+  },
+  {
+    id: "fieldOfStudyOrWork",
+    title: "Which of these is closest to your field of study or work today?",
+    helpText: "If you're not sure yet, that's a real answer too.",
+    type: "single",
+    options: [
+      { value: "technology", label: "Technology & Data", fieldWeights: fw({ technology: 8 }), traitWeights: tw({ technical: 3 }) },
+      { value: "healthcare", label: "Healthcare & Medicine", fieldWeights: fw({ healthcare: 8 }), traitWeights: tw({ peopleHelping: 3 }) },
+      { value: "engineering", label: "Engineering & Built Environment", fieldWeights: fw({ engineering: 8 }), traitWeights: tw({ technical: 3 }) },
+      { value: "business", label: "Business, Finance & Management", fieldWeights: fw({ business: 8 }), traitWeights: tw({ businessAcumen: 3 }) },
+      { value: "law_public", label: "Law & Public Service", fieldWeights: fw({ law_public: 8 }), traitWeights: tw({ communication: 2 }) },
+      { value: "education", label: "Education & Teaching", fieldWeights: fw({ education: 8 }), traitWeights: tw({ peopleHelping: 2 }) },
+      { value: "design_creative", label: "Design & Creative Arts", fieldWeights: fw({ design_creative: 8 }), traitWeights: tw({ creative: 3 }) },
+      { value: "media_communication", label: "Media & Communication", fieldWeights: fw({ media_communication: 8 }), traitWeights: tw({ communication: 3 }) },
+      { value: "science", label: "Science & Research", fieldWeights: fw({ science: 8 }), traitWeights: tw({ analytical: 3 }) },
+      { value: "not_sure", label: "Not sure yet / none of these" },
+    ],
+  },
+  {
+    id: "technicalConfidence",
+    title: "How confident are you using technical or digital tools?",
+    helpText: "Think spreadsheets, code, design software, data tools — whatever's relevant to you.",
+    type: "single",
+    options: [
+      { value: "1", label: "Not confident — I avoid technical tools", traitWeights: tw({ technical: 1 }) },
+      { value: "2", label: "A little — I get by with the basics", traitWeights: tw({ technical: 2 }) },
+      { value: "3", label: "Moderately confident", traitWeights: tw({ technical: 4 }) },
+      { value: "4", label: "Confident — I pick up new tools quickly", traitWeights: tw({ technical: 6 }) },
+      { value: "5", label: "Very confident — technical tools are a core strength", traitWeights: tw({ technical: 8 }) },
+    ],
+  },
+  {
+    id: "learningAgilityLevel",
+    title: "When things change — new tools, new processes, new expectations — how quickly do you adapt?",
+    type: "single",
+    options: [
+      { value: "1", label: "I need a lot of time and support to adjust", traitWeights: tw({ structure: 2 }) },
+      { value: "2", label: "I adjust slowly but steadily", traitWeights: tw({ structure: 1 }) },
+      { value: "3", label: "I adjust at a normal pace" },
+      { value: "4", label: "I adjust quickly", traitWeights: tw({ riskTolerance: 3 }) },
+      { value: "5", label: "I thrive on change — I pick things up almost immediately", traitWeights: tw({ riskTolerance: 6, independence: 2 }) },
+    ],
+  },
+  {
+    id: "communicationConfidenceLevel",
+    title: "How comfortable are you presenting ideas or explaining things to a group?",
+    type: "single",
+    options: [
+      { value: "1", label: "Very uncomfortable — I avoid it when I can", traitWeights: tw({ independence: 2 }) },
+      { value: "2", label: "A little uncomfortable" },
+      { value: "3", label: "Comfortable in familiar settings", traitWeights: tw({ communication: 3 }) },
+      { value: "4", label: "Comfortable in most settings", traitWeights: tw({ communication: 5 }) },
+      { value: "5", label: "Very comfortable — I enjoy presenting and explaining", traitWeights: tw({ communication: 8, leadership: 2 }) },
+    ],
+  },
+  {
+    id: "growthAreas",
+    title: "Which areas would you most like to grow in?",
+    helpText: "Choose up to 2 — this personalizes your roadmap, not your matches.",
+    type: "multi",
+    max: 2,
+    options: [
+      { value: "analytical", label: "Analytical & logical thinking", traitWeights: tw({ analytical: 3 }) },
+      { value: "empathy", label: "Empathy & understanding people", traitWeights: tw({ peopleHelping: 3 }) },
+      { value: "creativity", label: "Creativity & imagination", traitWeights: tw({ creative: 3 }) },
+      { value: "organization", label: "Organization & planning", traitWeights: tw({ structure: 3 }) },
+      { value: "communication", label: "Communication & persuasion", traitWeights: tw({ communication: 3 }) },
+      { value: "leadership", label: "Leadership & motivating others", traitWeights: tw({ leadership: 3 }) },
+      { value: "technical", label: "Hands-on / technical skill", traitWeights: tw({ technical: 3 }) },
+      { value: "business", label: "Business & strategic thinking", traitWeights: tw({ businessAcumen: 3 }) },
+    ],
+  },
+  {
+    id: "workEnvironmentPreference",
+    title: "Which work setting brings out your best?",
+    type: "single",
+    options: [
+      { value: "remote_independent", label: "Remote / independent, on my own schedule", traitWeights: tw({ independence: 6 }) },
+      { value: "office_team", label: "In-person, working closely with a team", traitWeights: tw({ communication: 4, peopleHelping: 2 }) },
+      { value: "hybrid", label: "Hybrid — a mix of both" },
+      { value: "field_hands_on", label: "Out in the field / hands-on, not at a desk", fieldWeights: fw({ engineering: 3, healthcare: 2 }), traitWeights: tw({ technical: 4, riskTolerance: 2 }) },
+    ],
+  },
+  {
+    id: "workPace",
+    title: "What pace do you do your best work at?",
+    type: "single",
+    options: [
+      { value: "fast_paced", label: "Fast-paced, lots of variety", traitWeights: tw({ riskTolerance: 5 }) },
+      { value: "steady_predictable", label: "Steady and predictable", traitWeights: tw({ structure: 6 }) },
+      { value: "deadline_driven", label: "Deadline-driven, focused sprints", traitWeights: tw({ responsibility: 4, structure: 2 }) },
+      { value: "flexible_self_paced", label: "Flexible, self-paced", traitWeights: tw({ independence: 5 }) },
+    ],
+  },
+  {
+    id: "structurePreference",
+    title: "You do your best work with…",
+    type: "single",
+    options: [
+      { value: "clear_rules", label: "Clear rules, processes, and expectations", traitWeights: tw({ structure: 7 }) },
+      { value: "creative_freedom", label: "Freedom to figure it out your own way", traitWeights: tw({ creative: 4, independence: 4 }) },
+      { value: "mix_of_both", label: "A mix — some structure, some freedom" },
+    ],
+  },
+  {
+    id: "goalHorizon",
+    title: "What's your main focus right now?",
+    type: "single",
+    options: [
+      { value: "exploring_options", label: "Exploring options — I don't have a direction yet" },
+      { value: "building_foundational_skills", label: "Building foundational skills for a field I've chosen", traitWeights: tw({ structure: 2 }) },
+      { value: "launching_a_career", label: "Launching my first career / job", traitWeights: tw({ riskTolerance: 2 }) },
+      { value: "advancing_or_switching", label: "Advancing or switching careers", traitWeights: tw({ riskTolerance: 3, independence: 2 }) },
+    ],
+  },
+  {
     id: "organizationInterest",
     title: "Which organizations or workplaces interest you?",
     helpText: "Search and select as many as you like — this is optional.",
@@ -177,11 +326,11 @@ export const BASIC_QUESTIONS: DiscoveryQuestion[] = [
 ];
 
 export const TOTAL_BASIC_QUESTIONS = BASIC_QUESTIONS.length;
-/** ~8s per question keeps the whole basic set inside the promised 60–90s. */
+/** ~8s per question keeps the whole Core tier inside a few minutes. */
 export const ESTIMATED_BASIC_SECONDS = TOTAL_BASIC_QUESTIONS * 8;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ADVANCED — optional, 28 questions across 19 work-style traits, retargeted
+// ADVANCED — optional, 30 questions across 19 work-style traits, retargeted
 // to the 11 scoring traits so they refine standing across the full catalog.
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -520,6 +669,30 @@ export const ADVANCED_QUESTIONS: DiscoveryQuestion[] = [
       { value: "needs_structure", label: "Needs some structure to stay on track", traitWeights: tw({ structure: 5 }) },
       { value: "depends_project", label: "Depends heavily on the project", traitWeights: tw({ creative: 3, riskTolerance: 2 }) },
       { value: "drops_accountability", label: "Drops — you do better with accountability", traitWeights: tw({ peopleHelping: 2, communication: 2 }) },
+    ],
+  },
+  {
+    id: "adv_adaptability_2",
+    trait: "Adaptability",
+    title: "Your team suddenly switches tools or process mid-project. You…",
+    type: "single",
+    options: [
+      { value: "relearn_fast", label: "Relearn the new system quickly and move on", traitWeights: tw({ riskTolerance: 5, technical: 2 }) },
+      { value: "want_reason", label: "Want to understand why before switching", traitWeights: tw({ analytical: 4, structure: 2 }) },
+      { value: "miss_old_way", label: "Miss the old way, but adapt anyway", traitWeights: tw({ structure: 4 }) },
+      { value: "help_others_adjust", label: "Help others on the team adjust too", traitWeights: tw({ peopleHelping: 3, communication: 3 }) },
+    ],
+  },
+  {
+    id: "adv_teamwork_2",
+    trait: "Teamwork",
+    title: "A teammate is struggling to keep up. You…",
+    type: "single",
+    options: [
+      { value: "jump_in_help", label: "Jump in and help them directly", traitWeights: tw({ peopleHelping: 5, communication: 2 }) },
+      { value: "flag_to_lead", label: "Flag it to whoever's leading the project", traitWeights: tw({ structure: 3, responsibility: 3 }) },
+      { value: "focus_own_work", label: "Stay focused on your own part", traitWeights: tw({ independence: 5, technical: 2 }) },
+      { value: "suggest_process_fix", label: "Suggest a process change so it doesn't happen again", traitWeights: tw({ structure: 4, analytical: 3 }) },
     ],
   },
 ];
